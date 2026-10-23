@@ -2,6 +2,24 @@
 
 A browser-only FMCG fleet allocation and daily dispatch prototype. React, TypeScript, Vite and MapLibre; no backend, credentials or runtime AI service. Dispatch demand, retailer profiles, locations and GPS positions are synthetic. A separate public reference catalog lists sourced branch names/addresses and is excluded from dispatch. Routes are heuristic sequences with estimated connections, not road directions or proven optimal solutions.
 
+## Start here: panel review
+
+The decision this prototype supports is **how much refrigerated and dry capacity to allocate, and whether that fleet can serve a modeled delivery day**. It recommends capacity from volume, weight and workload, then exposes route feasibility, partial orders and exceptions.
+
+| Read | What it explains |
+|---|---|
+| [Core changes and reasoning](docs/core-changes.md) | Why the implementation changed, what is implemented now, and links to published code milestones |
+| [Module-by-module review notes](docs/prototype-review-notes.md) | Calculation walkthroughs, worked examples, source links, baseline results and answers to rehearse |
+| [Approach and mathematical models](docs/approach-draft.md) | Implemented heuristic, proposed production optimization, assumptions and demand-review triggers |
+| [Presentation script](docs/panel-guide.md) | The 30-minute panel narrative and demo sequence |
+| [Verification record](docs/verification.md) | Automated evidence and browser/hosting verification gaps |
+
+**Scope and interpretation:** the brief describes about 50,000 mapped retailers and requests roughly 100 synthetic orders for one distributor. The prototype began with Pasig, then expanded to six independent distributor samples, initially 600 profiles in total. The fleet figures size those sample days; actual regional fleet requirements need historical demand and local calibration. No five-year order history was supplied or used to train a forecast.
+
+**Operating policy:** frozen and dry portions travel separately, by explicit user choice. Type A serves ice cream; Type B serves the other SKUs. A mixed basket needs both jobs assigned to count as a complete order. Multi-drop routes consolidate compatible jobs from different retailers. Truck capacity is enforced in CBM and KG; clocks use PHT. Retailer receiving hours and illustrative restrictions are assumptions.
+
+**Leadership interpretation:** assess complete-order coverage and exceptions alongside utilization, visits per used truck, distance and cost. Assigned-job window compliance can be 100% while orders remain unassigned. All displayed performance is modeled, not actual delivery execution. The app uses seeded demand and a greedy heuristic; forecasting and mathematical optimization are proposed production steps.
+
 ## Run locally
 
 Requires Node.js 20.19+ or 22.12+ (Node 24 is also supported).

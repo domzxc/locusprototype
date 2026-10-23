@@ -1,5 +1,9 @@
 # DomTransport release log
 
+## Panel-facing current explanation
+
+Start with [core changes and reasoning](core-changes.md) and [module review notes](prototype-review-notes.md). They describe the final combined behavior; older entries below describe the implementation at their publication date. In particular, Pasig-only routing and transferred regional workload proxies were superseded by the six-distributor update. Current sample allocations are not full-network fleet acquisition recommendations. Git history is preserved.
+
 ## 23 October 2026: initial GitHub publication
 
 - Repository: https://github.com/domzxc/locusprototype

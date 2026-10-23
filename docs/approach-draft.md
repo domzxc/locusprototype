@@ -1,6 +1,8 @@
 # DomTransport: fleet allocation and daily dispatch
 
-**Review draft · 23 October 2026 · synthetic data only**
+**Review draft · updated 24 October 2026 · synthetic data only**
+
+Related: [core changes and reasoning](core-changes.md), [module calculations and rehearsal notes](prototype-review-notes.md).
 
 ## 1. Leadership recommendation
 
@@ -32,7 +34,7 @@ The prototype now demonstrates this loop for all six distributors, with an overa
 | Receiving hours | Editable same-day opening/closing and closed-day flag for each distributor master; full handling must fit |
 | Load segregation | User-selected policy: ice cream only on Type A, dry products only on Type B. The challenge does not explicitly authorise mixed frozen/dry loads |
 
-| SKU | CBM/box | KG/case | Load min/case | Unload min/case | Compatibility |
+| SKU | CBM/box | KG/box | Load min/box | Unload min/box | Compatibility |
 |---|---:|---:|---:|---:|---|
 | Toothpaste | 0.035 | 12 | 0.2 | 1 | B only |
 | Ice cream | 0.09 | 18 | 0.5 | 2 | A only |
@@ -60,7 +62,7 @@ The browser prototype generates seeded demand; it does not train or run a foreca
 
 For distributor d and vehicle class t, split each basket into a frozen job for Type A and a dry job for Type B, omitting empty portions. Preserve original order IDs for completion accounting. Let:
 
-- V_dt and W_dt be total assigned basket volume and weight;
+- V_dt and W_dt be total serviceable delivery-job volume and weight before routing;
 - Qv_t and Qw_t be vehicle volume and weight limits;
 - Hshift = (shift end − shift start − depot preparation) / 60 hours;
 - H_dt be estimated handling hours plus nominal travel hours;

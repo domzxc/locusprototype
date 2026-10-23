@@ -2,6 +2,8 @@
 
 Review draft · 30-minute session. The approach document is `approach-draft.md`.
 
+For technical rehearsal, read [module review notes](prototype-review-notes.md); for the reasons behind the core changes, read [the decision record](core-changes.md). Both match the current six-distributor implementation and distinguish sample-day results from production recommendations.
+
 ## Opening: the decision in 30 seconds
 
 “I separated the strategic fleet decision from daily routing. We size refrigerated capacity for cold-chain demand, use larger dry trucks for compatible baskets, reserve seasonal uplift, and validate the fleet against daily service constraints. Every figure in this demo is synthetic. I will show both a feasible plan and what happens when capacity becomes insufficient.”
