@@ -24,3 +24,8 @@ Added synthetic retailer profile management and a separate ten-record Metro Mani
 ## 24 October 2026: Philippine logistics conventions
 
 Standardised capacity and payload labels to CBM/KG, added editable per-box CBM and KG, PHT clock inputs for shifts and illustrative truck bans, PHT schedule displays and export metadata. Reserve is entered as a percentage. Legacy browser settings retain minute-based times and gain default packaging measurements. Thirty automated tests and production build pass; supported browser and Render checks remain unavailable/pending. The illustrative ban does not claim verified local regulatory coverage.
+
+
+## 24 October 2026: six-distributor dispatch and master data
+
+Expanded routing from the Pasig pilot to all six distributors with independent synthetic depots, local zones/traffic, retailer receiving schedules and operating assumptions. Added overall Network overview, scoped navigation/editors, aggregate export and version-2 all-settings export with version-1 migration. Existing Pasig data and legacy non-Pasig profile ownership are preserved. Default samples total 600 profiles; 50,000 remains the distinct business footprint, not demo daily demand. All 39 tests and production build pass; server-rendering smoke checks pass for the overview and six local editors. Browser/WebGL and Render verification remain outstanding. See network-masters.md for data ownership, migration, limits and rollback.

@@ -6,7 +6,7 @@
 
 Separate a recurring fleet decision from daily dispatch. Forecast each distributor's cold and dry workload, establish a normal baseline, reserve incremental capacity for peak demand, then test the allocation against actual delivery windows, payloads and travel conditions. Revisit allocations when demand or service indicators drift.
 
-The prototype demonstrates this loop for Pasig. It does not infer actual fleet requirements from the problem statement alone: five years of historical orders, capacities and retailer mapping were described but not supplied. Every numerical input below is an illustrative assumption.
+The prototype now demonstrates this loop for all six distributors, with an overall network summary and independent local master data. It does not infer actual fleet requirements from the problem statement alone: five years of historical orders, capacities and retailer mapping were described but not supplied. Every numerical input below is an illustrative assumption.
 
 ## 2. Assumptions and synthetic data
 
@@ -14,7 +14,7 @@ The prototype demonstrates this loop for Pasig. It does not infer actual fleet r
 |---|---|
 | Mapped retailer population | 50,000 across all six distributors |
 | Distributor shares | QC 11,000; Manila 10,000; Makati 9,000; Pasig 5,000; Bulacan 8,000; Cavite 7,000 |
-| Daily activity | 2% of mapped retailers at default settings; 1,000 daily regional orders, including 100 Pasig orders |
+| Demo activity | 100 synthetic retailer profiles per distributor initially (600 total); saved Pasig sample preserved. Sample orders are not extrapolated to 50,000 daily orders |
 | Pasig location model | Five synthetic clusters near Kapitolyo, Ortigas, Rosario, Santolan and Pinagbuhatan, not actual retailer addresses |
 | SKU unit | A synthetic case; sizes and weights are assumed, not commercial specifications |
 | Cold demand | Approximately 28% chance of ice cream per basket; mixed baskets become separate frozen and dry deliveries |
@@ -22,17 +22,17 @@ The prototype demonstrates this loop for Pasig. It does not infer actual fleet r
 | Peak scenario | Each nonzero case quantity multiplied by 1.6 and rounded up; same retailer count and seeded windows. Rounding means aggregate growth is greater than exactly 60% |
 | Windows | 08:00, 09:00, 10:00 or 11:00 opens, four-hour windows, full handling must finish before close |
 | Shift | 06:00–18:00; 25 minutes fixed depot preparation; one trip per vehicle |
-| Type A | Refrigerated; 5 m³, 900 kg; PHP 1,700 per used vehicle/day plus PHP 24/km |
-| Type B | Dry; 11 m³, 2,500 kg; PHP 1,400 per used vehicle/day plus PHP 16/km |
+| Type A | Refrigerated; 5 CBM, 900 KG; PHP 1,700 per used vehicle/day plus PHP 24/km |
+| Type B | Dry; 11 CBM, 2,500 KG; PHP 1,400 per used vehicle/day plus PHP 16/km |
 | Base travel | 22 km/h; haversine distance × 1.35 detour; time × 1.35 network traffic factor × destination zone factor |
 | Zone traffic factors | Kapitolyo 1.20, Ortigas 1.65, Rosario 1.40, Santolan 1.30, Pinagbuhatan 1.25 |
 | Fleet reserve | 15% workload buffer before rounding vehicle counts |
 | Restriction | Illustrative Type B no-movement interval 07:00–09:00; origin waiting if a modeled leg would overlap; applies to all modeled travel, including depot return |
-| Regional transfer | All six use the Pasig basket/handling/travel workload proxy. No regional road-network or geographic validation |
-| Receiving hours | Editable same-day opening/closing times and closed-day flag for every synthetic Pasig retailer; full handling must fit |
+| Local masters | Six separate depot locations, five traffic zones each, seeds, retailer receiving schedules and operating assumptions. All synthetic and uncalibrated |
+| Receiving hours | Editable same-day opening/closing and closed-day flag for each distributor master; full handling must fit |
 | Load segregation | User-selected policy: ice cream only on Type A, dry products only on Type B. The challenge does not explicitly authorise mixed frozen/dry loads |
 
-| SKU | m³/case | kg/case | Load min/case | Unload min/case | Compatibility |
+| SKU | CBM/box | KG/case | Load min/case | Unload min/case | Compatibility |
 |---|---:|---:|---:|---:|---|
 | Toothpaste | 0.035 | 12 | 0.2 | 1 | B only |
 | Ice cream | 0.09 | 18 | 0.5 | 2 | A only |
@@ -42,11 +42,11 @@ The prototype demonstrates this loop for Pasig. It does not infer actual fleet r
 
 Handling time at each delivery stop is five minutes fixed plus sum of its case quantities × (loading + unloading minutes). Both case handling components are conservatively charged at each stop, including in the receiving window. A mixed parent order needs two deliveries and incurs the fixed stop handling twice. This is a time-budget proxy; it does not simulate warehouse loading operations. Fixed depot preparation is separate.
 
-Retailer management contains editable synthetic profiles and receiving hours for the Pasig demo, replacing the former receiving-hours-only editor in Data studio. Add/edit identities, locations, distributor assignments and schedules; archive/restore profiles; import/export JSON; then apply. Closed retailers remain in demand and count as incomplete, while being excluded from allocation's serviceable workload. Archived profiles leave daily demand. A labeled stress example closes the first five active Pasig retailers and gives the next ten short receiving windows. It is a chosen sensitivity scenario, not a forecast of failed deliveries. No weekly calendar, holidays, multiple daily intervals, receiving-dock capacity or actual delivery confirmations are modeled. Pasig-specific profiles and hour overrides are not copied to the other distributors' synthetic retailer IDs.
+Retailer management is scoped to the selected distributor. Add/edit synthetic identities, local coordinates and schedules; archive/restore, import/export JSON, then apply. Closed retailers stay in demand as exceptions and are excluded from serviceable allocation workload. Each stress example closes the first five active local retailers and shortens the next ten windows. No weekly calendar, dock contention or actual delivery confirmations are modeled. Distributor ownership is fixed within each editor to prevent accidental cross-master reassignment.
 
-A separate, source-linked Metro Manila public branch/address catalog is available for reference only. It is not used as dispatch data and contains no asserted receiving windows or verified coordinates. See the retailer-management guide for provenance and separation from the synthetic panel dataset. After an explicit master is applied, the number of active Pasig profiles determines that demo's order count; the configured generated-order count remains the regional proxy baseline. The initial unedited master preserves the 100-order baseline.
+A separate source-linked public Metro Manila address catalog remains reference-only. It is excluded from all dispatch masters and asserts no verified receiving hours or coordinates. Active profiles in each master determine that distributor sample demand. The initial Pasig master preserves the original baseline. See network-masters.md for scoped settings and migration.
 
-All assumptions above can be reviewed. The interface edits demand, time, payload, cost and traffic inputs; case dimensions and weight constants and the mapped-retailer split are documented source constants. Settings JSON preserves the complete editable configuration, including zone coordinates.
+The interface edits depot/zone coordinates, traffic, receiving windows, box CBM/KG, handling, capacities, costs and PHT operating times independently for each distributor. The mapped-retailer split is an illustrative source constant. Settings export version 2 contains all six masters; legacy version 1 migrates existing Pasig edits.
 
 ## 3. Forecasting approach for supplied historical data
 
@@ -131,7 +131,7 @@ The heuristic is deterministic for a fixed seed/configuration, indivisible froze
 - Cost = used-vehicle daily fixed charge + estimated km × per-km charge. Idle ownership, tolls, overtime, separate spoilage and lost-sales costs are excluded.
 - GPS is interpolated simulation along planned connections. It respects modeled waits and returns; it is not a telemetry feed.
 
-At seed 42 and initial defaults, observed engine results:
+For the Pasig distributor at seed 42 and initial defaults, observed engine results:
 
 | Scenario | Allocated A/B | Used | Served | Mean volume utilization | Estimated km | Modeled cost |
 |---|---|---:|---:|---:|---:|---:|
@@ -142,14 +142,14 @@ The 100 original retailer orders produce 125 frozen/dry jobs. Normal assigns 118
 
 | Distributor | Normal A | Normal B | Peak A | Peak B |
 |---|---:|---:|---:|---:|
-| Quezon City | 3 | 13 | 6 | 22 |
-| Manila City | 3 | 12 | 5 | 20 |
-| Makati | 3 | 11 | 5 | 18 |
+| Quezon City | 2 | 7 | 3 | 10 |
+| Manila City | 2 | 8 | 3 | 11 |
+| Makati | 3 | 8 | 4 | 11 |
 | Pasig | 2 | 6 | 3 | 10 |
-| Bulacan | 3 | 10 | 4 | 16 |
-| Cavite | 2 | 9 | 3 | 15 |
+| Bulacan | 2 | 6 | 3 | 11 |
+| Cavite | 2 | 6 | 3 | 10 |
 
-These are synthetic demonstrations, not a general sizing recommendation. Exact figures change with settings. The peak example has one idle allocated vehicle; reserve is not automatically waste.
+These counts size the independently generated 100-order sample days, not the full 50,000-retailer footprint. Normal network results: 545/600 complete orders, 53/54 used/allocated vehicles, 1,319.9 KM and PHP 102,581. Peak: 578/600 complete, 80/82 used/allocated, 1,756.2 KM and PHP 149,296. These are synthetic demonstrations, not a general sizing recommendation. Exact figures change with settings. Spare allocated vehicles can coexist with missed orders when time windows, geography or the heuristic prevent service.
 
 ## 8. Reallocation policy
 

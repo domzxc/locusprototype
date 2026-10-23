@@ -42,17 +42,18 @@ export function generateOrders(c, scenario = 'normal') {
     const receiving = c.receivingHours?.[id];
     const order={id,name:`${['Sari-sari','Family Mart','Mini Grocery','Trading Store'][i%4]} ${i+1}`,zone,area:z.name,lng:z.lng+(rand()-.5)*.014,lat:z.lat+(rand()-.5)*.014,quantities,volume,weight,cold:quantities[1]>0,open:receiving?.open??retailer?.open??open,close:receiving?.close??retailer?.close??Math.min(1020,open+240),receivingClosed:receiving?.closed??retailer?.closed??false,service:c.stopBase+quantities.reduce((s,q,p)=>s+q*(c.service[p]+c.loadService[p]),0)};
     return retailer?{...order,name:retailer.name,address:retailer.address,lng:retailer.lng,lat:retailer.lat}:order;
-  }).filter((_,i)=>!roster||(roster[i].enabled&&roster[i].distributor==='Pasig'));
+  }).filter((_,i)=>!roster||(roster[i].enabled&&roster[i].distributor===(c.distributor??'Pasig')));
 }
 export function getRetailers(c) {
   if(c.retailers) return copy(c.retailers).map(r=>{
     const hours=c.receivingHours?.[r.id];
     return {...r,open:hours?.open??r.open,close:hours?.close??r.close,closed:hours?.closed??r.closed};
   });
-  return generateOrders({...c,retailers:undefined}).map(o=>({id:o.id,name:o.name,address:`Synthetic delivery point in ${o.area}`,city:'Pasig',distributor:'Pasig',zone:o.zone,lng:o.lng,lat:o.lat,enabled:true,open:o.open,close:o.close,closed:o.receivingClosed,synthetic:true,notes:'Assumed receiving window for the synthetic demo day.'}));
+  return generateOrders({...c,retailers:undefined}).map(o=>({id:o.id,name:o.name,address:`Synthetic delivery point in ${o.area}`,city:c.distributor??'Pasig',distributor:c.distributor??'Pasig',zone:o.zone,lng:o.lng,lat:o.lat,enabled:true,open:o.open,close:o.close,closed:o.receivingClosed,synthetic:true,notes:'Assumed receiving window for the synthetic demo day.'}));
 }
 export function importRetailerMaster(value,c) {
   if(!value||value.kind!=='domtransport-retailer-master'||value.version!==1||value.synthetic!==true||!Array.isArray(value.retailers)) throw Error('Use a version 1 synthetic retailer master export. Public reference catalogs cannot be imported as dispatch data.');
+  if(value.distributor&&c.distributor&&value.distributor!==c.distributor) throw Error(`Choose the ${value.distributor} workspace before importing this master.`);
   return validateConfig({...c,retailers:copy(value.retailers),receivingHours:{}});
 }
 export function splitOrders(orders,c) {
@@ -88,12 +89,13 @@ export function travel(a,b,depart,type,c) {
 }
 export function plan(orders,c,fleet) {
   const deliveries=splitOrders(orders,c);
+  const depot=c.depot??DEPOT;
   const pending = new Map(deliveries.map(o=>[o.id,o]));
   const routes=[];
   for (const type of ['A','B']) {
     for(let v=0;v<fleet[type];v++) {
-      const route={id:`${type}-${String(v+1).padStart(2,'0')}`,type,stops:[],volume:0,weight:0,km:0,banWait:0,depart:c.start+c.loading};
-      let loc=DEPOT, time=route.depart;
+      const route={id:`${type}-${String(v+1).padStart(2,'0')}`,type,stops:[],volume:0,weight:0,km:0,banWait:0,depart:c.start+c.loading,depot:copy(depot)};
+      let loc=depot, time=route.depart;
       while(true) {
         let best=null;
         for(const o of pending.values()) {
@@ -101,7 +103,7 @@ export function plan(orders,c,fleet) {
           if((o.cold?'A':'B')!==type) continue;
           if(route.volume+o.volume>c[type].capacity+1e-9 || route.weight+o.weight>c[type].weight+1e-9) continue;
           const leg=travel(loc,o,time,type,c), arrival=Math.max(leg.arrival,o.open), finish=arrival+o.service;
-          const back=travel(o,DEPOT,finish,type,c);
+          const back=travel(o,depot,finish,type,c);
           if(finish>o.close+1e-9 || back.arrival>c.end+1e-9) continue;
           const score=leg.km*3 + Math.max(0,o.open-leg.arrival)*.12 + (o.close-c.start)*.012;
           if(!best || score<best.score) best={o,leg,arrival,finish,score};
@@ -113,7 +115,7 @@ export function plan(orders,c,fleet) {
         pending.delete(o.id);loc=o;time=finish;
       }
       if(route.stops.length) {
-        const back=travel(loc,DEPOT,time,type,c); route.km+=back.km; route.banWait+=back.wait; route.return=back.arrival;
+        const back=travel(loc,depot,time,type,c); route.km+=back.km; route.banWait+=back.wait; route.return=back.arrival;
         route.cost=c[type].fixed+route.km*c[type].km; routes.push(route);
       } else break; // Identical unused vehicles cannot improve this type's next tour.
     }
@@ -132,7 +134,8 @@ export function plan(orders,c,fleet) {
   return {routes,unserved,unassignedDeliveries,served,partial,deliveryTotal:deliveries.length,deliveryAssigned:assigned.length,averageDrops:routes.length?assigned.length/routes.length:0,total:orders.length,km:routes.reduce((s,r)=>s+r.km,0),cost:routes.reduce((s,r)=>s+r.cost,0),util:routes.length?routes.reduce((s,r)=>s+r.volume/c[r.type].capacity,0)/routes.length:0,onTime:assigned.length?assigned.filter(o=>o.finish<=o.close+1e-9).length/assigned.length:0,coverage:orders.length?served/orders.length:0,fleet};
 }
 export function positionAt(route, minute) {
-  let origin=DEPOT, departure=route.depart;
+  const depot=route.depot??DEPOT;
+  let origin=depot, departure=route.depart;
   for(const stop of route.stops) {
     const leave=departure+stop.banWait, arrival=stop.arrival-stop.wait;
     if(minute<leave) return {...origin,status:'Waiting / restriction'};
@@ -147,7 +150,7 @@ export function positionAt(route, minute) {
   const leave=departure+returnWait;
   if(minute<leave) return {...origin,status:'Waiting / restriction'};
   const f=route.return>leave?Math.max(0,Math.min(1,(minute-leave)/(route.return-leave))):1;
-  return {lng:origin.lng+(DEPOT.lng-origin.lng)*f,lat:origin.lat+(DEPOT.lat-origin.lat)*f,status:minute>=route.return?'Returned to depot':'Returning'};
+  return {lng:origin.lng+(depot.lng-origin.lng)*f,lat:origin.lat+(depot.lat-origin.lat)*f,status:minute>=route.return?'Returned to depot':'Returning'};
 }
 export const DISTRIBUTORS = [
   {name:'Quezon City',retailers:11000}, {name:'Manila City',retailers:10000},
@@ -156,7 +159,7 @@ export const DISTRIBUTORS = [
 ];
 export function regionalAllocation(c) {
   return DISTRIBUTORS.map(d=>{
-    const config={...c,orders:Math.max(1,Math.round(c.orders*d.retailers/5000)),receivingHours:d.name==='Pasig'?c.receivingHours:{},retailers:d.name==='Pasig'?c.retailers:undefined};
+    const config=c.network?.[d.name]??{...c,orders:Math.max(1,Math.round(c.orders*d.retailers/5000)),receivingHours:d.name==='Pasig'?c.receivingHours:{},retailers:d.name==='Pasig'?c.retailers:undefined};
     const normal=generateOrders(config), peak=generateOrders(config,'peak');
     return {...d,daily:normal.length,normal:allocate(normal,config),peak:allocate(peak,config)};
   });
@@ -170,7 +173,7 @@ export function validateConfig(c) {
   for(const t of ['A','B']) for(const k of ['capacity','weight','km','fixed']) if(!finite(c[t][k],.01,100000)) throw Error(`Invalid Type ${t} ${k}.`);
   if(!Array.isArray(c.service)||c.service.length!==5||c.service.some(x=>!finite(x,0,60))) throw Error('Invalid product handling time.');
   if(!Array.isArray(c.loadService)||c.loadService.length!==5||c.loadService.some(x=>!finite(x,0,60))) throw Error('Invalid product loading time.');
-  if(!Array.isArray(c.zones)||c.zones.length!==5||c.zones.some(z=>!z || typeof z.name!=='string' || !z.name.trim() || z.name.length>80 || !finite(z.factor,1,4) || !finite(z.lng,120.9,121.2) || !finite(z.lat,14.4,14.8))) throw Error('Invalid location: use five named zones with coordinates near Pasig and traffic factors 1–4.');
+  if(!Array.isArray(c.zones)||c.zones.length!==5||c.zones.some(z=>!z || typeof z.name!=='string' || !z.name.trim() || z.name.length>80 || !finite(z.factor,1,4) || !finite(z.lng,120.5,121.5) || !finite(z.lat,14,15.4))) throw Error('Invalid location: use five named zones with coordinates in Greater Manila and traffic factors 1–4.');
   if(!finite(c.ban.start,0,1440)||!finite(c.ban.end,0,1440)||c.ban.start>=c.ban.end||!['A','B'].includes(c.ban.type)||typeof c.ban.enabled!=='boolean') throw Error('Invalid restriction interval.');
   if(c.receivingHours!==undefined) {
     if(!c.receivingHours || typeof c.receivingHours!=='object' || Array.isArray(c.receivingHours) || Object.keys(c.receivingHours).length>500) throw Error('Receiving hours must contain up to 500 retailer entries.');
@@ -194,5 +197,19 @@ export function validateConfig(c) {
     const values=c[key]===undefined?fallback:c[key];
     if(!Array.isArray(values)||values.length!==5||values.some(v=>!finite(v,.000001,max))) throw Error(`Invalid ${key}: provide five positive per-box CBM/KG values.`);
   }
-  return {...c,receivingHours:c.receivingHours??{},productCbm:copy(c.productCbm??PRODUCT_VOLUME),productKg:copy(c.productKg??PRODUCT_WEIGHT)};
+  if(c.distributor!==undefined&&!DISTRIBUTORS.some(d=>d.name===c.distributor)) throw Error('Unknown distributor.');
+  if(c.depot!==undefined&&(!c.depot||!finite(c.depot.lng,120.5,121.5)||!finite(c.depot.lat,14,15.4))) throw Error('Invalid depot coordinates.');
+  if(c.distributor&&c.retailers?.some(r=>r.distributor!==c.distributor)) throw Error('Retailer master contains a different distributor.');
+  let network;
+  if(c.network!==undefined) {
+    if(!c.network||typeof c.network!=='object'||Array.isArray(c.network)||Object.keys(c.network).length!==6) throw Error('Network must contain all six distributors.');
+    network={};const ids=new Set();
+    for(const d of DISTRIBUTORS) {
+      const local=c.network[d.name];
+      if(!local||local.network!==undefined||local.distributor!==d.name||!local.depot||!Array.isArray(local.retailers)) throw Error(`Invalid master for ${d.name}.`);
+      network[d.name]=validateConfig(local);
+      for(const r of local.retailers){if(ids.has(r.id))throw Error('Retailer IDs must be unique across the network.');ids.add(r.id);}
+    }
+  }
+  return {...c,receivingHours:c.receivingHours??{},productCbm:copy(c.productCbm??PRODUCT_VOLUME),productKg:copy(c.productKg??PRODUCT_WEIGHT),...(network?{network}: {})};
 }

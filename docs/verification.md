@@ -5,7 +5,7 @@ RISK: medium
 
 ## Summary
 
-Implemented the browser-only React dispatch app, MapLibre map and simulated playback, transparent six-distributor fleet estimates, editable logistics settings, settings/plan export and settings import. Added planning invariants and review-ready approach/panel/deployment documents. Implementation is ready for local review; browser QA and publication remain outstanding.
+Expanded the browser-only prototype to six independent distributor dispatch/master-data workspaces and an overall sample-day network summary. Existing Pasig edits migrate intact, with globally unique retailer IDs, per-distributor depots/traffic/receiving schedules/operating inputs and validated full-network import/export. Automated and server-rendering checks pass. Browser interaction, WebGL/map visual QA and Render smoke verification remain outstanding; earlier GitHub publication is recorded below.
 
 ## Files changed
 
@@ -13,13 +13,14 @@ Implemented the browser-only React dispatch app, MapLibre map and simulated play
 |---|---|
 | src/App.tsx | Navigation, dispatch, manifests, order book, fleet overrides, allocation view, panel guide, local persistence and import/export |
 | src/MapView.tsx | MapLibre raster basemap, colored routes, unassigned markers, depot and scheduled simulated positions |
-| src/Settings.tsx | Validated editable logistics assumption form |
+| src/Settings.tsx | Scoped logistics form, local depot/zone coordinates, CBM/KG packaging and PHT clocks |
+| network.js, network.d.ts, src/NetworkOverview.tsx | Six-master migration, atomic settings import, local configuration updates, ID allocation and sample-day totals/UI |
 | src/styles.css, src/palette.ts | Responsive interface and route colors |
 | src/types.ts, engine.d.ts | Product loading configuration and typed engine boundary |
 | engine.js | Peak case accounting, separate frozen/dry jobs, parent-order completion, receiving-hour validation/enforcement, regional sizing proxy and modeled GPS |
 | src/RetailerManagement.tsx | Synthetic profile CRUD/archive, receiving schedules, validated import/export and separate public-reference catalog; replaces RetailerHours.tsx |
 | src/data/metro-manila-retailer-references.json | Ten source-attributed public address references; receiving windows and verified coordinates deliberately null |
-| tests/planning.test.mjs, tests/retailers.test.mjs, tests/ph-conventions.test.mjs | Thirty meaningful planning, KPI, master-data and provenance-boundary tests |
+| tests/planning.test.mjs, tests/retailers.test.mjs, tests/ph-conventions.test.mjs, tests/network.test.mjs | Thirty-nine meaningful planning, KPI, master-data and provenance-boundary tests |
 | .gitignore | Exclude environment variants and local tool/settings directories |
 | README.md, docs | Usage, approach equations, baseline results, panel defence, deployment and this record |
 
@@ -27,8 +28,9 @@ Implemented the browser-only React dispatch app, MapLibre map and simulated play
 
 | Command | Outcome |
 |---|---|
-| npm test | 30 tests passed, zero failures, including PHT clock conversions, configurable box payload conservation and legacy settings migration |
+| npm test | 39 tests passed, zero failures, including six-distributor migration/isolation, local depot routes/GPS, normal/peak constraints, aggregate arithmetic, scoped imports and empty masters |
 | npm run build | TypeScript passed; Vite production build succeeded. Known large MapLibre chunk warning |
+| Vite SSR + renderToString smoke | Overview and all six local settings/retailer views rendered with expected local zone/profile content; not a browser interaction test |
 | node --input-type=module baseline calculation | Normal 2 A + 6 B, 8 used, 93 fully planned parent orders, 1 partial, 118/125 jobs, 164.921 km, PHP 14,892.953; peak 3 A + 10 B, 12 used, 100 fully planned, 125/125 jobs, 184.970 km, PHP 20,736.425 |
 | node --input-type=module receiving-hour stress calculation | Default seed with first 5 retailers closed and next 10 given 15-minute windows: 84 fully planned orders, 16 incomplete including 2 partial, 107/125 jobs assigned, all 5 closed retailers remain incomplete |
 | Invoke-WebRequest http://127.0.0.1:5173/ | HTTP 200 from the local Vite server |
@@ -40,7 +42,7 @@ The sandboxed Vite dev server could not traverse dependency directories. It was 
 
 ## Acceptance criteria
 
-- [x] Six normal/peak allocation estimates with declared retailer split, workload formula, uncertainty and review triggers.
+- [x] Six independently scoped synthetic normal/peak allocations, dispatch plans and masters, with overall sample-day totals; mapped retailer footprint is separate.
 - [x] Default 100 synthetic Pasig orders, five SKUs, integer case quantities and cold compatibility.
 - [x] Assigned routes enforce both payload limits, service start/open, full service/close and depot return/shift constraints. Infeasible orders remain explicit.
 - [x] Editable travel, traffic factors, product loading/unloading, capacities, cost, shift and illustrative vehicle-type restriction.
@@ -49,7 +51,7 @@ The sandboxed Vite dev server could not traverse dependency directories. It was 
 - [x] Model limitations and absence of live routing/GPS/forecasting clearly documented in app and approach.
 - [x] Panel guidance, approach draft and Render static hosting handoff prepared before final PDF.
 - [ ] Browser critical journeys, map visual QA and narrow-screen QA: no supported browser available in this session.
-- [ ] Final PDF, GitHub publication and Render deployment: deferred until completed review as requested.
+- [ ] Final PDF and Render deployment remain pending; GitHub publication of prior updates is verified below.
 
 ## NOT verified
 
@@ -60,7 +62,7 @@ The sandboxed Vite dev server could not traverse dependency directories. It was 
 
 ## Decisions / assumptions
 
-Only Pasig is daily routed. Other distributors are selectable for allocation summaries, not local route plans. Regional fleet counts reuse Pasig workload distributions; other distributor geographies are not simulated. Pasig-specific receiving-hour overrides do not transfer to other distributors. Peak increases integer basket quantities, not active retailer count. User-selected segregation puts frozen jobs only on A and dry jobs only on B; a mixed order can need two receiving visits, each with fixed handling overhead. No dock-contention or actual delivery-confirmation model exists. Per-case loading/unloading are conservatively charged within stop handling. Fixed daily cost is for used vehicles only. The app invokes no runtime AI service.
+All six distributors now have detailed synthetic sample-day routing. Each master owns depot coordinates, zones/traffic, profiles/receiving hours, vehicle/product assumptions and operating times; all values remain illustrative. The displayed 50,000-retailer footprint is distinct from initially 600 sample profiles. Per-master allocation sizes each sample, not full-network demand. Legacy Pasig data and profiles formerly mapped elsewhere migrate into their owners. Separate frozen/dry jobs, modeled windows/return limits and visible infeasibility remain enforced. Network totals use recommended local fleets; temporary overrides are local experiments and vehicles are not shared. The app invokes no runtime AI service.
 
 ## Review
 
@@ -110,3 +112,8 @@ The app is now committed and published to GitHub; the initial application commit
 
 
 Philippine conventions update (24 October 2026): added src/ph-conventions.js and its type declarations, shared PHT wall-clock helpers, clock inputs for shift/illustrative ban, CBM/KG labels and editable SKU box measurements. Order book separates CBM/KG columns, manifests format fractional KG, reserve input shows percent, and exports declare units/time basis. Existing minute-based schedules and default payload values are preserved. New tests initially failed because the helper module was absent, then passed after implementation. Production build passes with the existing MapLibre bundle warning. Browser inventory again returned no apps/browsers; visual/time-input interaction QA and Render deployment remain unverified. GitHub publication of earlier work is verified below; this update is recorded in the release log.
+
+
+Six-distributor expansion (24 October 2026): added nine regression/integration tests (39 total). Test-first failure reproduced the absent network module. Migration initially compared complete generated objects and found the newly materialized synthetic address property; the check now verifies every original field unchanged while allowing that additive profile field. Legacy hour overrides are resolved before splitting profiles into owners. Scoped imports reject wrong-region empty masters, mixed ownership, invalid depots, nested/incomplete networks, duplicate network IDs and plan files. Applying changes validates synchronously before replacing state, so form error handlers can report rejection. New retailer IDs account for all masters and pending local profiles. Existing legacy-only engine tests remain intact and pass.
+
+Server rendering smoke: Vite SSR loader plus React renderToString successfully rendered NetworkOverview and all six Settings/RetailerManagement views, asserting each local zone/profile. This does not verify events, downloads, persistence or WebGL. Browser inventory again returned no apps/browsers. The production build passes with the existing MapLibre bundle-size warning. Network baseline calculation: normal 545/600 complete, 53/54 used/allocated vehicles, 1,319.944 KM, PHP 102,581.312; peak 578/600, 80/82, 1,756.208 KM, PHP 149,295.799. Docs now describe sample sizing rather than transferred Pasig proxies. Review: checked requested six-workspace/master-data scope first, then migration/ownership/constraint/React-state/export boundaries. See network-masters.md for the browser checklist and rollback.

@@ -23,7 +23,7 @@ Navigation is component state on one URL, so no nested SPA paths or fallback rew
 
 ## Will the JSON settings still work?
 
-Yes. The application has browser-local JSON settings, not a shared JSON database on the server. Receiving-hour edits, traffic, costs and other applied assumptions are stored in localStorage and can be exported/imported as version-1 settings JSON. Synthetic orders and dispatch plans are regenerated from that configuration and the seed. Version-2 plan exports are review snapshots, not settings imports.
+Yes. The application has browser-local JSON settings, not a shared JSON database on the server. Receiving-hour edits, traffic, costs and other applied assumptions are stored in localStorage and can be exported as version-2 domtransport-settings JSON (all six masters); legacy version-1 imports remain supported. Synthetic orders and dispatch plans are regenerated from that configuration and the seed. Version-2 plan exports are review snapshots, not settings imports.
 
 Localhost and Render are different browser origins: export settings from localhost and import the file in Data studio at the live Render URL. They do not transfer automatically. Reloading or redeploying at the same hostname normally keeps localStorage. A different device, browser, private session, cleared site data or new hostname uses separate storage. Different users do not see each other's changes. A shared database would need a separate backend/data service and is outside the current prototype scope.
 

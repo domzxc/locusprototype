@@ -11,10 +11,10 @@ Review draft · 30-minute session. The approach document is `approach-draft.md`.
 | Time | Action | Leadership message |
 |---|---|---|
 | 0–3 | State service/cost objective, retailer split and missing inputs | Explain assumptions before showing impressive numbers |
-| 3–5 | Open Fleet allocation; normal vs peak counts | Separate permanent baseline from seasonal rental reserve |
+| 3–5 | Open Network overview, then Fleet allocation; normal vs peak samples | Separate permanent baseline from seasonal rental reserve |
 | 5–7 | Explain binding volume / weight / time workload, then routing validation | Aggregate sizing alone cannot guarantee feasibility |
 | 7–9 | Open Dispatch; normal seed 42; show 100 orders and coverage | Cold chain and full windows are modeled hard constraints |
-| 9–10 | Select A-01 and inspect its manifest | Only ice cream on A; dry portions travel separately on B. Show kg, m³ and parent retailer IDs |
+| 9–10 | Select A-01 and inspect its manifest | Only ice cream on A; dry portions travel separately on B. Show KG, CBM and parent retailer IDs |
 | 10–11 | Play modeled GPS, pause and scrub | Clearly label simulation and estimated travel |
 | 11–12 | Switch to peak | Larger baskets increase payload/handling, with integer case rounding |
 | 12–13 | Set both fleet counts to zero or sharply reduce them | Coverage collapses; unassigned orders remain visible; on-time alone is insufficient |
@@ -51,7 +51,7 @@ Before rehearsing, load default settings in Data studio and apply. Restore them 
 
 **“How much money will this save?”** The demo does not establish savings. Define a current dispatch baseline and compare equal-service scenarios including lease, labour, tolls, refrigeration, failed deliveries and lost sales. Report uncertainty, not a fabricated percentage.
 
-**“What is your biggest gap?”** Local travel and demand calibration, solver benchmarking and field validation. The regional sizing uses Pasig proxies, so Bulacan and Cavite counts especially need geographic validation.
+**“What is your biggest gap?”** Local travel and demand calibration, solver benchmarking and field validation. All six now have independent synthetic masters, but their traffic, depot coordinates and demand remain assumptions. Sample-day fleets are not full-network acquisition recommendations.
 
 **“How will you refresh allocation?”** Daily dispatch, weekly forecasts and monthly baseline reviews. Investigate persistent demand drift or utilization/service thresholds; prefer seasonal rental for temporary peaks before acquiring permanent fleet.
 
@@ -65,3 +65,6 @@ Before rehearsing, load default settings in Data studio and apply. Restore them 
 
 
 Philippine-unit defence: "We plan against both CBM and KG because a load can reach its space limit before its weight limit, or vice versa. SKU boxes are converted using editable packaging assumptions. All receiving, shift and truck-ban times are PHT. The demo restriction is illustrative; production needs verified MMDA/LGU rules by road, vehicle class, day and exemption."
+
+
+**Why all six now?** The challenge required only one routed distributor; we expanded it to six independent synthetic masters to demonstrate regional visibility. Select Manila or Cavite, inspect different local traffic zones/retailers, edit a receiving window, and return to Network overview. Explain that 600 demo profiles are a sample; 50,000 is the stated retailer footprint and does not mean 50,000 daily orders. Production fleet sizing requires actual distributor demand and order frequency.

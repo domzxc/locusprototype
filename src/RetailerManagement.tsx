@@ -1,54 +1,58 @@
 import { useEffect, useRef, useState } from 'react';
 import { ArrowDownToLine, ArrowUpFromLine, Plus, Store } from 'lucide-react';
-import { copy, DEPOT, DISTRIBUTORS, getRetailers, importRetailerMaster, validateConfig } from '../engine.js';
+import { copy, DEPOT, getRetailers, importRetailerMaster, validateConfig } from '../engine.js';
 import type { Config, Retailer } from './types';
 import { NumberField } from './Settings';
 import { PH_UNITS, toTimeInput, parseTimeInput, formatPHTime } from './ph-conventions.js';
+import { nextRetailerId } from '../network.js';
 import references from './data/metro-manila-retailer-references.json';
 
 const clock=toTimeInput;
 const minutes=parseTimeInput;
 function download(name:string,value:unknown){const url=URL.createObjectURL(new Blob([JSON.stringify(value,null,2)],{type:'application/json'}));const link=document.createElement('a');link.href=url;link.download=name;link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
 
-export default function RetailerManagement({config,onSave}:{config:Config;onSave:(c:Config)=>void}){
+export default function RetailerManagement({config,onSave,usedIds}:{config:Config;onSave:(c:Config)=>void;usedIds:string[]}){
   const [draft,setDraft]=useState(()=>getRetailers(config)),[search,setSearch]=useState(''),[tab,setTab]=useState<'master'|'references'>('master');
   const [form,setForm]=useState<Retailer|null>(null),[message,setMessage]=useState('');
   const formRef=useRef<HTMLFormElement>(null);
   useEffect(()=>{formRef.current?.scrollIntoView({block:'start'});formRef.current?.querySelector('input')?.focus({preventScroll:true});},[form?.id]);
   const matches=(text:string)=>text.toLowerCase().includes(search.toLowerCase());
   const visible=draft.filter(r=>matches(`${r.id} ${r.name} ${r.address} ${r.city} ${r.distributor}`));
-  const activePasig=draft.filter(r=>r.enabled&&r.distributor==='Pasig').length;
+  const distributor=config.distributor??'Pasig';
+  const activeLocal=draft.filter(r=>r.enabled&&r.distributor===distributor).length;
   function patch(values:Partial<Retailer>){setForm(previous=>previous?{...previous,...values}:null);}
   function validated(){return validateConfig({...config,retailers:draft,receivingHours:{}});}
   function apply(){try{onSave(validated());setMessage('Retailer master applied.');}catch(e){setMessage((e as Error).message);}}
   function add(){
-    const next=Math.max(0,...draft.map(r=>Number(r.id.slice(4))))+1;
-    setForm({id:`RET-${String(next).padStart(3,'0')}`,name:`Demo Retailer ${next}`,address:'Synthetic delivery point',city:'Pasig',distributor:'Pasig',zone:0,...DEPOT,open:480,close:1020,closed:false,enabled:true,synthetic:true,notes:'Assumed receiving window. Synthetic profile.'});
+    let id;
+    try{id=nextRetailerId([...usedIds,...draft.map(r=>r.id)]);}catch(e){setMessage((e as Error).message);return;}
+    const next=Number(id.slice(4));
+    setForm({id,name:`Demo Retailer ${next}`,address:'Synthetic delivery point',city:distributor,distributor,zone:0,...(config.depot??DEPOT),open:480,close:1020,closed:false,enabled:true,synthetic:true,notes:'Assumed receiving window. Synthetic profile.'});
   }
   function saveProfile(){
     if(!form)return;
     const next=draft.some(r=>r.id===form.id)?draft.map(r=>r.id===form.id?form:r):[...draft,form];
     try{validateConfig({...config,retailers:next,receivingHours:{}});setDraft(next);setForm(null);setMessage('Profile updated in the editor. Apply retailer master to replan.');}catch(e){setMessage((e as Error).message);}
   }
-  function exportMaster(){try{const c=validated();download('domtransport-retailers.json',{kind:'domtransport-retailer-master',version:1,units:PH_UNITS,synthetic:true,retailers:c.retailers});setMessage('Editor master exported. Apply to use pending edits in dispatch.');}catch(e){setMessage((e as Error).message);}}
+  function exportMaster(){try{const c=validated();download(`domtransport-${distributor.toLowerCase().replaceAll(' ','-')}-retailers.json`,{kind:'domtransport-retailer-master',version:1,units:PH_UNITS,distributor,synthetic:true,retailers:c.retailers});setMessage('Editor master exported. Apply to use pending edits in dispatch.');}catch(e){setMessage((e as Error).message);}}
   async function importFile(file?:File){
     if(!file)return;
     try{if(file.size>1000000)throw Error('Use a retailer master smaller than 1 MB.');const next=importRetailerMaster(JSON.parse(await file.text()),config);setDraft(next.retailers??[]);setForm(null);setMessage('Master imported into the editor. Apply retailer master to save and replan.');}catch(e){setMessage(`Import failed: ${(e as Error).message}`);}
   }
-  function stress(){let index=0;setDraft(draft.map(r=>{if(!r.enabled||r.distributor!=='Pasig')return r;const i=index++;return i<5?{...r,closed:true}:i<15?{...r,closed:false,close:Math.min(1439,r.open+15)}:r;}));setMessage('Stress example loaded: first 5 active Pasig retailers closed; next 10 get short windows. Apply to replan.');}
+  function stress(){let index=0;setDraft(draft.map(r=>{if(!r.enabled||r.distributor!==distributor)return r;const i=index++;return i<5?{...r,closed:true}:i<15?{...r,closed:false,close:Math.min(1439,r.open+15)}:r;}));setMessage('Stress example loaded: first 5 active local retailers closed; next 10 get short windows. Apply to replan.');}
   return <>
     <div className="retailer-tabs" aria-label="Retailer data views"><button aria-pressed={tab==='master'} className={tab==='master'?'primary':''} onClick={()=>{setTab('master');setSearch('');}}>Synthetic retailer master <span>{draft.length}</span></button><button aria-pressed={tab==='references'} className={tab==='references'?'primary':''} onClick={()=>{setTab('references');setSearch('');}}>Metro Manila public references <span>{references.records.length}</span></button></div>
     {message&&<div className="notice" role="status">{message}</div>}
     {tab==='master'?<>
-      <section className="card retailer-summary"><div className="card-title"><div><h2><Store size={18}/>Retailer management</h2><p>Profiles, assignments and receiving windows for the synthetic demo day.</p></div><button className="primary" onClick={apply}>Apply retailer master</button></div><div className="retailer-summary-metrics"><span><strong>{draft.length}</strong> profiles</span><span><strong>{activePasig}</strong> active Pasig profiles</span><span><strong>{draft.filter(r=>!r.enabled).length}</strong> archived</span><span><strong>{draft.filter(r=>r.enabled&&r.distributor==='Pasig'&&r.closed).length}</strong> Pasig closed today</span></div><p className="hours-description">Dispatch generates one synthetic order for each active Pasig profile when this master is applied. Other distributor profiles remain in the catalog; their detailed routes are outside this pilot. Closed retailers stay in demand and become exceptions. Archived retailers leave demo demand. Receiving hours are assumptions or your edits, not verified public data.</p></section>
+      <section className="card retailer-summary"><div className="card-title"><div><h2><Store size={18}/>{distributor} retailer management</h2><p>Profiles, assignments and receiving windows for the synthetic demo day.</p></div><button className="primary" onClick={apply}>Apply retailer master</button></div><div className="retailer-summary-metrics"><span><strong>{draft.length}</strong> profiles</span><span><strong>{activeLocal}</strong> active {distributor} profiles</span><span><strong>{draft.filter(r=>!r.enabled).length}</strong> archived</span><span><strong>{draft.filter(r=>r.enabled&&r.distributor===distributor&&r.closed).length}</strong> {distributor} closed today</span></div><p className="hours-description">This is the {distributor} master. Dispatch generates one synthetic order per active profile. Each distributor has a separate master; closed retailers stay in demand as exceptions and archived retailers leave demand. Receiving windows are assumptions or your edits, not verified public data.</p></section>
       <div className="data-actions retailer-actions"><button onClick={add} disabled={draft.length>=500}><Plus size={16}/>Add synthetic retailer</button><button onClick={exportMaster}><ArrowDownToLine size={16}/>Export editor master</button><label className="button"><ArrowUpFromLine size={16}/>Import master<input type="file" accept=".json,application/json" onChange={e=>{void importFile(e.target.files?.[0]);e.target.value='';}}/></label><button onClick={stress}>Load receiving-hours stress example</button></div>
       {form&&<form ref={formRef} className="card retailer-form" onSubmit={e=>{e.preventDefault();saveProfile();}}><div className="section-heading"><div><h2>{draft.some(r=>r.id===form.id)?'Edit retailer':'New retailer'} <span className="tag">{form.id}</span></h2><p>Use fictional retailer identities and assumed coordinates for the panel dataset.</p></div><button type="button" onClick={()=>setForm(null)}>Cancel edit</button></div><div className="retailer-form-grid">
         <label className="field"><span>Retailer name</span><input required maxLength={100} value={form.name} onChange={e=>patch({name:e.target.value})}/></label>
         <label className="field"><span>Synthetic address / delivery instructions</span><input maxLength={200} value={form.address} onChange={e=>patch({address:e.target.value})}/></label>
         <label className="field"><span>City / municipality</span><input required maxLength={80} value={form.city} onChange={e=>patch({city:e.target.value})}/></label>
-        <label className="field"><span>Assigned distributor</span><select value={form.distributor} onChange={e=>patch({distributor:e.target.value})}>{DISTRIBUTORS.map(d=><option key={d.name}>{d.name}</option>)}</select></label>
+        <label className="field"><span>Assigned distributor</span><input readOnly value={distributor}/></label>
         <NumberField label="Latitude" value={form.lat} min={14} max={15.4} step="any" onChange={lat=>patch({lat})}/><NumberField label="Longitude" value={form.lng} min={120.5} max={121.5} step="any" onChange={lng=>patch({lng})}/>
-        <label className="field"><span>Pasig traffic assumption zone</span><select value={form.zone} onChange={e=>patch({zone:+e.target.value})}>{config.zones.map((z,i)=><option key={z.name} value={i}>{z.name}</option>)}</select></label>
+        <label className="field"><span>Local traffic assumption zone</span><select value={form.zone} onChange={e=>patch({zone:+e.target.value})}>{config.zones.map((z,i)=><option key={z.name} value={i}>{z.name}</option>)}</select></label>
         <label className="field"><span>Receiving opens (PHT)</span><input type="time" required step="60" value={clock(form.open)} onChange={e=>patch({open:minutes(e.target.value)})}/></label>
         <label className="field"><span>Receiving closes (PHT)</span><input type="time" required step="60" value={clock(form.close)} onChange={e=>patch({close:minutes(e.target.value)})}/></label>
         <label className="field"><span>Notes / assumption basis</span><input maxLength={500} value={form.notes??''} onChange={e=>patch({notes:e.target.value})}/></label>

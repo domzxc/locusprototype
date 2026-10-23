@@ -4,7 +4,7 @@ Updated 23 October 2026.
 
 ## Use the synthetic retailer master
 
-Open **Retailer management → Synthetic retailer master**. The editor initially materializes the existing approximately 100 synthetic Pasig retailers, including any previously saved receiving-hour overrides. This does not change their original payloads, coordinates or windows.
+Choose a distributor in the sidebar/workspace selector, then open **Retailer management > Synthetic retailer master**. Each of the six masters starts with about 100 profiles. Migration preserves existing Pasig profiles and any profiles previously assigned elsewhere, including receiving overrides.
 
 1. Select **Edit** or **Add synthetic retailer**.
 2. Enter a fictional name/address, city, one assigned distributor, coordinates and traffic assumption zone. Coordinates must be within the supported Greater Manila bounds; this is input validation, not geocoding or proof that an address exists.
@@ -12,11 +12,11 @@ Open **Retailer management → Synthetic retailer master**. The editor initially
 4. Select **Update profile in editor**, then **Apply retailer master** to save and replan. Profile and archive changes remain drafts until applied.
 5. Use **Export editor master** / **Import master** for a standalone version-1 retailer JSON file. Import validates the entire replacement before changing the editor; apply afterward. The full Data studio settings export also includes the applied master.
 
-The master supports up to 500 profiles and stable unique RET- IDs. Archive/restore is reversible. Closed retailers remain active demand and can be unassigned; archived retailers are removed from the demo day's demand. Moving a profile to another distributor removes it from the Pasig dispatch pilot without pretending that local routing exists for the other distributor. Archiving a profile preserves the seeded SKU baskets of remaining profiles. Explicitly replacing/reordering a master or changing the seed may change demand.
+Each master supports up to 500 profiles and globally unique RET- IDs. Distributor ownership is fixed to the active workspace. Archive/restore is reversible; closed retailers remain demand, archived retailers leave demand. Archiving preserves remaining seeded baskets; replacing/reordering a master or changing the seed may change baskets. New IDs consider all applied masters and local draft IDs.
 
-Once a master is applied, Pasig generates one synthetic order per active Pasig profile. An empty active master produces no orders. The generated-order setting in Data studio remains a separate baseline for the other distributors' allocation proxies and for Pasig when no explicit master exists. The 50,000-retailer regional population is still an illustrative aggregate; editing this small catalog does not create a full regional retailer register.
+Each distributor generates one order per active profile in its own master. An empty master produces no orders. The 50,000 mapped-retailer footprint remains a separate illustrative aggregate, not the size of this synthetic sample or daily order count. The generated-order fallback is hidden once a master exists; add/archive profiles to change sample demand.
 
-The **receiving-hours stress example** closes the first five active Pasig profiles and gives the next ten short windows. Apply it to demonstrate exceptions. It is a declared scenario, not an estimated real failure rate.
+The **receiving-hours stress example** closes the first five active local profiles and gives the next ten short windows. Apply it to demonstrate exceptions. It is a declared scenario, not an estimated real failure rate.
 
 ## Public Metro Manila reference sample
 
@@ -32,10 +32,12 @@ Public OpenStreetMap/Overpass research was attempted but endpoints rejected requ
 
 Applied profiles remain in the browser's localStorage and settings JSON. There is no shared server database. Export/import transfers them between localhost, Render, devices or browsers. Public reference data is bundled with the app and requires no live API call.
 
-Only one receiving interval on the modeled day is supported. Weekly calendars, lunch breaks, holidays, receiving-dock contention, actual delivery confirmations, address verification and source freshness checks remain outside this feature. The shared Pasig traffic zones are assumptions, including when a user enters a new point.
+Only one receiving interval on the modeled day is supported. Weekly calendars, lunch breaks, holidays, receiving-dock contention, actual delivery confirmations, address verification and source freshness checks remain outside this feature. Traffic assumptions belong to each distributor; all are illustrative.
 
 ## Verification and rollback
 
 Automated checks cover master materialization, identity/location/window propagation, archive and distributor filtering, remaining-basket stability, closed-retailer exceptions, schema validation, duplicate/public-data rejection, atomic replacement and legacy receiving-hour boundaries. The production build checks the React/TypeScript integration. Browser interaction checks remain unverified because no supported browser was available in this session.
 
 Before replacing/importing a master, export it. To restore default generated mode, load and apply default assumptions in Data studio; this resets all operating assumptions, so preserve a settings export first. Source rollback uses a normal Git revert of the retailer-management change, preserving published history. The current baseline before applying edits remains 93 fully planned orders out of 100 under separate frozen/dry delivery.
+
+Full settings use version 2 with kind `domtransport-settings` and contain all six masters; standalone retailer files remain version 1 and include the distributor. Importing a different distributor master is rejected. All times are PHT. See [network master guide](network-masters.md).
