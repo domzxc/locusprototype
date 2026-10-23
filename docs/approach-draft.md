@@ -166,3 +166,12 @@ Production next steps: obtain real data under proper access controls, geocode/va
 ## 10. Submission and review
 
 Review the assumptions, narrative and results before creating the final PDF. The user has explicitly authorized source publication, and the code is now at [domzxc/locusprototype](https://github.com/domzxc/locusprototype). Render account connection and hosted smoke testing remain pending. After deployment, include the finalized approach PDF, GitHub link and verified live app link in the submission. No email has been sent and no hosted service has been deployed from this session; see the release log for publication evidence.
+
+
+## Philippine logistics units and schedules
+
+The app uses CBM (cubic metres) and KG for vehicle capacities, order loads and manifests; quantity remains boxes. One synthetic case represents one box. Each SKU has editable CBM/box and KG/box in Data studio. Total load is the sum of box quantity multiplied by its per-box CBM or KG; both capacity constraints must hold. These packaging measurements are assumptions, not measured supplier specifications. Existing settings without packaging arrays receive the previous defaults.
+
+All clock fields and schedule displays use Philippine wall-clock time, PHT (UTC+8, Asia/Manila), independently of the browser timezone. Shift and illustrative truck-ban settings use clock inputs rather than raw minutes. Defaults are 6:00 AM-6:00 PM for the shift and 7:00 AM-9:00 AM for the illustrative ban. The ban is a synthetic, editable no-movement assumption, not a statement of current MMDA/LGU rules. Only same-day intervals are modeled; midnight in shift/ban end fields means the end of that day. Retailer receiving intervals remain within the same day.
+
+Internal JSON schedule values remain minutes after midnight to preserve compatibility. Exports include unit/time-basis metadata; the numeric fields are not UTC timestamps. Fleet reserve is entered as a percentage (15 means 15%) and stored as a fraction (0.15). Costs use PHP and distance uses KM. CBM is the same volume unit previously labeled cubic metres, so renaming alone changes no allocation.

@@ -400,3 +400,6 @@ footer>span:last-child{text-align:right}
 .kpi-grid.dispatch-kpis{grid-template-columns:repeat(5,minmax(0,1fr))}
 @media(max-width:1200px){.kpi-grid.dispatch-kpis{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(max-width:720px){.kpi-grid.dispatch-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.dispatch-kpis>.metric:last-child{grid-column:1/-1}}
+
+/* Philippine logistics conventions */
+.local-conventions{display:flex;flex-wrap:wrap;gap:8px 24px;color:var(--muted);font-size:12px;margin:0 0 22px}.field-help{font-size:11px;color:var(--muted);line-height:1.5}.field input[type="time"]{min-width:145px;min-height:36px}

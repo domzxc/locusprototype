@@ -54,3 +54,12 @@ Settings and retailer receiving hours remain usable on Render. They are JSON-ser
 Synthetic case sizes, traffic and costs need calibration. Travel is haversine distance × detour factor at an adjusted speed. MapLibre draws straight connections; simulated GPS follows that modeled schedule. Basemap tiles come from OpenStreetMap and fonts from Google Fonts, requiring internet; failures do not change the planning engine. No geocoding, live traffic, legal truck-ban validation, temperature telemetry, splitting a frozen/dry job across vehicles, multi-trip dispatch, driver breaks or real forecasting is implemented.
 
 The daily cost includes fixed charges only for used vehicles plus per-km costs. Idle ownership costs are excluded. Allocation is a workload sizing heuristic; daily routing is greedy and may miss a feasible solution. Always examine full parent-order coverage and partial assignments alongside assigned-delivery window compliance.
+
+
+## Philippine logistics units and schedules
+
+The app uses CBM (cubic metres) and KG for vehicle capacities, order loads and manifests; quantity remains boxes. One synthetic case represents one box. Each SKU has editable CBM/box and KG/box in Data studio. Total load is the sum of box quantity multiplied by its per-box CBM or KG; both capacity constraints must hold. These packaging measurements are assumptions, not measured supplier specifications. Existing settings without packaging arrays receive the previous defaults.
+
+All clock fields and schedule displays use Philippine wall-clock time, PHT (UTC+8, Asia/Manila), independently of the browser timezone. Shift and illustrative truck-ban settings use clock inputs rather than raw minutes. Defaults are 6:00 AM-6:00 PM for the shift and 7:00 AM-9:00 AM for the illustrative ban. The ban is a synthetic, editable no-movement assumption, not a statement of current MMDA/LGU rules. Only same-day intervals are modeled; midnight in shift/ban end fields means the end of that day. Retailer receiving intervals remain within the same day.
+
+Internal JSON schedule values remain minutes after midnight to preserve compatibility. Exports include unit/time-basis metadata; the numeric fields are not UTC timestamps. Fleet reserve is entered as a percentage (15 means 15%) and stored as a fraction (0.15). Costs use PHP and distance uses KM. CBM is the same volume unit previously labeled cubic metres, so renaming alone changes no allocation.

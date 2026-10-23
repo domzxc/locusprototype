@@ -19,7 +19,7 @@ Implemented the browser-only React dispatch app, MapLibre map and simulated play
 | engine.js | Peak case accounting, separate frozen/dry jobs, parent-order completion, receiving-hour validation/enforcement, regional sizing proxy and modeled GPS |
 | src/RetailerManagement.tsx | Synthetic profile CRUD/archive, receiving schedules, validated import/export and separate public-reference catalog; replaces RetailerHours.tsx |
 | src/data/metro-manila-retailer-references.json | Ten source-attributed public address references; receiving windows and verified coordinates deliberately null |
-| tests/planning.test.mjs, tests/retailers.test.mjs | Twenty-seven meaningful planning, KPI, master-data and provenance-boundary tests |
+| tests/planning.test.mjs, tests/retailers.test.mjs, tests/ph-conventions.test.mjs | Thirty meaningful planning, KPI, master-data and provenance-boundary tests |
 | .gitignore | Exclude environment variants and local tool/settings directories |
 | README.md, docs | Usage, approach equations, baseline results, panel defence, deployment and this record |
 
@@ -27,7 +27,7 @@ Implemented the browser-only React dispatch app, MapLibre map and simulated play
 
 | Command | Outcome |
 |---|---|
-| npm test | 27 tests passed, zero failures after adding average drops per used truck |
+| npm test | 30 tests passed, zero failures, including PHT clock conversions, configurable box payload conservation and legacy settings migration |
 | npm run build | TypeScript passed; Vite production build succeeded. Known large MapLibre chunk warning |
 | node --input-type=module baseline calculation | Normal 2 A + 6 B, 8 used, 93 fully planned parent orders, 1 partial, 118/125 jobs, 164.921 km, PHP 14,892.953; peak 3 A + 10 B, 12 used, 100 fully planned, 125/125 jobs, 184.970 km, PHP 20,736.425 |
 | node --input-type=module receiving-hour stress calculation | Default seed with first 5 retailers closed and next 10 given 15-minute windows: 84 fully planned orders, 16 incomplete including 2 partial, 107/125 jobs assigned, all 5 closed retailers remain incomplete |
@@ -107,3 +107,6 @@ Stage 2: self-reviewed compatibility, input validation, schedule consistency, co
 ## Rollback
 
 The app is now committed and published to GitHub; the initial application commit is recorded in the release log. Preserve published history. For later changes, create a branch, revert the relevant reviewed change with a normal Git revert, then publish the resulting commit; do not force-push or erase the repository. Render has not been deployed from this session; after a hosted release, use the prior successful deployment or reviewed Git version for rollback. To reset only application assumptions, use Data studio → Load defaults into form → Apply; this replaces browser-saved assumptions and recalculates the plan. Export settings first if you want to keep them.
+
+
+Philippine conventions update (24 October 2026): added src/ph-conventions.js and its type declarations, shared PHT wall-clock helpers, clock inputs for shift/illustrative ban, CBM/KG labels and editable SKU box measurements. Order book separates CBM/KG columns, manifests format fractional KG, reserve input shows percent, and exports declare units/time basis. Existing minute-based schedules and default payload values are preserved. New tests initially failed because the helper module was absent, then passed after implementation. Production build passes with the existing MapLibre bundle warning. Browser inventory again returned no apps/browsers; visual/time-input interaction QA and Render deployment remain unverified. GitHub publication of earlier work is verified below; this update is recorded in the release log.

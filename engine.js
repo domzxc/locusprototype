@@ -6,6 +6,7 @@ export const defaults = {
   seed: 42, orders: 100, peak: 1.6, speed: 22, detour: 1.35, traffic: 1.35,
   start: 360, end: 1080, loading: 25, stopBase: 5, reserve: 0.15,
   receivingHours: {},
+  productCbm: [...PRODUCT_VOLUME], productKg: [...PRODUCT_WEIGHT],
   service: [1, 2, 1, 5, 1],
   loadService: [.2, .5, .2, 1, .2],
   A: { capacity: 5, weight: 900, km: 24, fixed: 1700 },
@@ -26,6 +27,7 @@ export function distance(a, b) {
   return 6371 * 2 * Math.asin(Math.min(1, Math.sqrt(Math.sin(dlat/2)**2 + Math.cos(a.lat*rad)*Math.cos(b.lat*rad)*Math.sin(dlng/2)**2)));
 }
 export function generateOrders(c, scenario = 'normal') {
+  const cbm=c.productCbm??PRODUCT_VOLUME, kg=c.productKg??PRODUCT_WEIGHT;
   const rand = rng(c.seed), mult = scenario === 'peak' ? c.peak : 1;
   const roster=c.retailers;
   return Array.from({length:roster?.length??c.orders}, (_,i) => {
@@ -33,8 +35,8 @@ export function generateOrders(c, scenario = 'normal') {
     const zone = retailer?.zone??(i % c.zones.length), z = c.zones[zone];
     const quantities = PRODUCTS.map((_,p) => Math.ceil((p === 1 ? (rand() < .28 ? 1 + Math.floor(rand()*3) : 0) : Math.floor(rand()*4)) * mult));
     if (!quantities.some(Boolean)) quantities[0] = 1;
-    const volume = quantities.reduce((s,q,p) => s + q * PRODUCT_VOLUME[p],0);
-    const weight = quantities.reduce((s,q,p) => s + q * PRODUCT_WEIGHT[p],0);
+    const volume = quantities.reduce((s,q,p) => s + q * cbm[p],0);
+    const weight = quantities.reduce((s,q,p) => s + q * kg[p],0);
     const open = [480,540,600,660][Math.floor(rand()*4)];
     const id=retailer?.id??`RET-${String(i+1).padStart(3,'0')}`;
     const receiving = c.receivingHours?.[id];
@@ -54,14 +56,15 @@ export function importRetailerMaster(value,c) {
   return validateConfig({...c,retailers:copy(value.retailers),receivingHours:{}});
 }
 export function splitOrders(orders,c) {
+  const cbm=c.productCbm??PRODUCT_VOLUME, kg=c.productKg??PRODUCT_WEIGHT;
   return orders.flatMap(order=>{
-    const totalVolume=order.quantities.reduce((s,q,p)=>s+q*PRODUCT_VOLUME[p],0);
-    const totalWeight=order.quantities.reduce((s,q,p)=>s+q*PRODUCT_WEIGHT[p],0);
+    const totalVolume=order.quantities.reduce((s,q,p)=>s+q*cbm[p],0);
+    const totalWeight=order.quantities.reduce((s,q,p)=>s+q*kg[p],0);
     return ['frozen','dry'].flatMap(shipment=>{
       const quantities=order.quantities.map((q,p)=>(shipment==='frozen'?p===1:p!==1)?q:0);
       if(!quantities.some(Boolean)) return [];
-      const volumeShare=quantities.reduce((s,q,p)=>s+q*PRODUCT_VOLUME[p],0)/totalVolume;
-      const weightShare=quantities.reduce((s,q,p)=>s+q*PRODUCT_WEIGHT[p],0)/totalWeight;
+      const volumeShare=quantities.reduce((s,q,p)=>s+q*cbm[p],0)/totalVolume;
+      const weightShare=quantities.reduce((s,q,p)=>s+q*kg[p],0)/totalWeight;
       return [{...order,id:`${order.id}-${shipment==='frozen'?'F':'D'}`,parentId:order.id,shipment,quantities,cold:shipment==='frozen',volume:order.volume*volumeShare,weight:order.weight*weightShare,service:c.stopBase+quantities.reduce((s,q,p)=>s+q*(c.service[p]+c.loadService[p]),0)}];
     });
   });
@@ -162,7 +165,7 @@ export function validateConfig(c) {
   const finite=(x,min,max)=>Number.isFinite(x)&&x>=min&&x<=max;
   if(!c || typeof c !== 'object') throw Error('Settings must be a JSON object.');
   if(!Number.isInteger(c.seed)||!Number.isInteger(c.orders)||!finite(c.orders,1,500)) throw Error('Use 1–500 orders and an integer seed.');
-  for(const [k,min,max] of [['peak',1,4],['speed',5,100],['detour',1,3],['traffic',1,4],['start',0,1400],['end',1,1440],['loading',0,180],['stopBase',0,60],['reserve',0,1]]) if(!finite(c[k],min,max)) throw Error(`Invalid ${k}.`);
+  for(const [k,min,max] of [['peak',1,4],['speed',5,100],['detour',1,3],['traffic',1,4],['start',0,1439],['end',1,1440],['loading',0,180],['stopBase',0,60],['reserve',0,1]]) if(!finite(c[k],min,max)) throw Error(`Invalid ${k}.`);
   if(c.end<=c.start+c.loading) throw Error('Shift must exceed depot loading time.');
   for(const t of ['A','B']) for(const k of ['capacity','weight','km','fixed']) if(!finite(c[t][k],.01,100000)) throw Error(`Invalid Type ${t} ${k}.`);
   if(!Array.isArray(c.service)||c.service.length!==5||c.service.some(x=>!finite(x,0,60))) throw Error('Invalid product handling time.');
@@ -187,5 +190,9 @@ export function validateConfig(c) {
       if(r.notes!==undefined&&(typeof r.notes!=='string'||r.notes.length>500)) throw Error(`Notes are too long for ${r.id}.`);
     }
   }
-  return {...c,receivingHours:c.receivingHours??{}};
+  for(const [key,fallback,max] of [['productCbm',PRODUCT_VOLUME,100],['productKg',PRODUCT_WEIGHT,100000]]) {
+    const values=c[key]===undefined?fallback:c[key];
+    if(!Array.isArray(values)||values.length!==5||values.some(v=>!finite(v,.000001,max))) throw Error(`Invalid ${key}: provide five positive per-box CBM/KG values.`);
+  }
+  return {...c,receivingHours:c.receivingHours??{},productCbm:copy(c.productCbm??PRODUCT_VOLUME),productKg:copy(c.productKg??PRODUCT_WEIGHT)};
 }

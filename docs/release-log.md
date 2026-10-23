@@ -19,3 +19,8 @@ Applied JSON settings remain local to each browser origin. Export settings from 
 ## 23 October 2026: retailer-management update
 
 Added synthetic retailer profile management and a separate ten-record Metro Manila public reference catalog. Existing receiving windows migrate into editable profiles. Applied active Pasig profiles drive the demo; public references stay out of dispatch. Added data source/workflow notes, schema tests and a browser-QA checklist. Twenty-five automated tests and the production build pass; browser and hosted verification remain outstanding. This update does not establish verified retailer receiving schedules or current branch operation.
+
+
+## 24 October 2026: Philippine logistics conventions
+
+Standardised capacity and payload labels to CBM/KG, added editable per-box CBM and KG, PHT clock inputs for shifts and illustrative truck bans, PHT schedule displays and export metadata. Reserve is entered as a percentage. Legacy browser settings retain minute-based times and gain default packaging measurements. Thirty automated tests and production build pass; supported browser and Render checks remain unavailable/pending. The illustrative ban does not claim verified local regulatory coverage.

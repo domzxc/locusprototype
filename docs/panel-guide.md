@@ -62,3 +62,6 @@ Before rehearsing, load default settings in Data studio and apply. Restore them 
 - Test peak scenario, zero-fleet exceptions and restore recommendation.
 - Prepare final PDF only after draft review. Include app and GitHub links after deployment smoke testing.
 - Choose submission date after review; the interview is the next day. No deadline has been committed on your behalf.
+
+
+Philippine-unit defence: "We plan against both CBM and KG because a load can reach its space limit before its weight limit, or vice versa. SKU boxes are converted using editable packaging assumptions. All receiving, shift and truck-ban times are PHT. The demo restriction is illustrative; production needs verified MMDA/LGU rules by road, vehicle class, day and exemption."

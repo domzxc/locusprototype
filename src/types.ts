@@ -9,6 +9,7 @@ export interface Config {
   seed: number; orders: number; peak: number; speed: number; detour: number; traffic: number;
   start: number; end: number; loading: number; stopBase: number; reserve: number;
   service: number[]; loadService: number[]; A: VehicleSpec; B: VehicleSpec;
+  productCbm:number[]; productKg:number[];
   receivingHours: Record<string,ReceivingHours>;
   retailers?: Retailer[];
   zones: (Point & {name: string; factor: number})[];
