@@ -19,7 +19,7 @@ Implemented the browser-only React dispatch app, MapLibre map and simulated play
 | engine.js | Peak case accounting, separate frozen/dry jobs, parent-order completion, receiving-hour validation/enforcement, regional sizing proxy and modeled GPS |
 | src/RetailerManagement.tsx | Synthetic profile CRUD/archive, receiving schedules, validated import/export and separate public-reference catalog; replaces RetailerHours.tsx |
 | src/data/metro-manila-retailer-references.json | Ten source-attributed public address references; receiving windows and verified coordinates deliberately null |
-| tests/planning.test.mjs, tests/retailers.test.mjs | Twenty-five meaningful planning, master-data and provenance-boundary tests |
+| tests/planning.test.mjs, tests/retailers.test.mjs | Twenty-seven meaningful planning, KPI, master-data and provenance-boundary tests |
 | .gitignore | Exclude environment variants and local tool/settings directories |
 | README.md, docs | Usage, approach equations, baseline results, panel defence, deployment and this record |
 
@@ -27,7 +27,7 @@ Implemented the browser-only React dispatch app, MapLibre map and simulated play
 
 | Command | Outcome |
 |---|---|
-| npm test | 25 tests passed, zero failures after the retailer-management changes |
+| npm test | 27 tests passed, zero failures after adding average drops per used truck |
 | npm run build | TypeScript passed; Vite production build succeeded. Known large MapLibre chunk warning |
 | node --input-type=module baseline calculation | Normal 2 A + 6 B, 8 used, 93 fully planned parent orders, 1 partial, 118/125 jobs, 164.921 km, PHP 14,892.953; peak 3 A + 10 B, 12 used, 100 fully planned, 125/125 jobs, 184.970 km, PHP 20,736.425 |
 | node --input-type=module receiving-hour stress calculation | Default seed with first 5 retailers closed and next 10 given 15-minute windows: 84 fully planned orders, 16 incomplete including 2 partial, 107/125 jobs assigned, all 5 closed retailers remain incomplete |
@@ -63,6 +63,8 @@ The sandboxed Vite dev server could not traverse dependency directories. It was 
 Only Pasig is daily routed. Other distributors are selectable for allocation summaries, not local route plans. Regional fleet counts reuse Pasig workload distributions; other distributor geographies are not simulated. Pasig-specific receiving-hour overrides do not transfer to other distributors. Peak increases integer basket quantities, not active retailer count. User-selected segregation puts frozen jobs only on A and dry jobs only on B; a mixed order can need two receiving visits, each with fixed handling overhead. No dock-contention or actual delivery-confirmation model exists. Per-case loading/unloading are conservatively charged within stop handling. Fixed daily cost is for used vehicles only. The app invokes no runtime AI service.
 
 ## Review
+
+Average drops KPI: added `averageDrops` to the plan and JSON export, calculated as assigned delivery stops divided by used vehicles, with a zero guard. A new dispatch KPI card shows one decimal and its numerator/denominator; five cards adapt to three/two columns on narrower screens. Tests first failed on the absent metric and then passed for split frozen/dry deliveries, idle vehicles, a normal plan and zero-used-vehicle cases. Depot legs and unassigned deliveries are excluded; distinct parent-order coverage is unchanged. Browser visual QA remains unavailable.
 
 Retailer management: implemented a dedicated navigation page with up to 500 synthetic profiles, stable IDs, editable names/addresses/cities/distributor assignments/coordinates, one same-day receiving interval, active/archive status, closed-day flag and notes. Applied active Pasig profiles feed generated orders; archived and non-Pasig profiles do not silently become Pasig demand. The original unedited 100-profile master preserves the original baseline. JSON replacement is validated atomically and clears old receiving overrides; legacy settings remain usable. A regression test caught that spreading legacy receiving entries could alter profile identity; overrides now copy only opening, closing and closed fields. The seeded generator still consumes archived records so archiving does not change remaining baskets. Map bounds now include edited/assigned/unassigned points. The small public merchant-directory sample is separate from dispatch; unknown receiving times and coordinates are not fabricated. The app runs no live directory lookup/geocoding. Added source and workflow notes in retailer-management.md. Browser interaction/layout tests remain unavailable.
 

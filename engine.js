@@ -126,7 +126,7 @@ export function plan(orders,c,fleet) {
   const unserved=orders.filter(o=>missingByParent.has(o.id)).map(o=>({...o,reason:`${assignedParents.has(o.id)?'Partially planned: ':''}${missingByParent.get(o.id).map(d=>`${d.shipment}: ${d.reason}`).join('; ')}`}));
   const served=orders.length-unserved.length;
   const partial=unserved.filter(o=>assignedParents.has(o.id)).length;
-  return {routes,unserved,unassignedDeliveries,served,partial,deliveryTotal:deliveries.length,deliveryAssigned:assigned.length,total:orders.length,km:routes.reduce((s,r)=>s+r.km,0),cost:routes.reduce((s,r)=>s+r.cost,0),util:routes.length?routes.reduce((s,r)=>s+r.volume/c[r.type].capacity,0)/routes.length:0,onTime:assigned.length?assigned.filter(o=>o.finish<=o.close+1e-9).length/assigned.length:0,coverage:orders.length?served/orders.length:0,fleet};
+  return {routes,unserved,unassignedDeliveries,served,partial,deliveryTotal:deliveries.length,deliveryAssigned:assigned.length,averageDrops:routes.length?assigned.length/routes.length:0,total:orders.length,km:routes.reduce((s,r)=>s+r.km,0),cost:routes.reduce((s,r)=>s+r.cost,0),util:routes.length?routes.reduce((s,r)=>s+r.volume/c[r.type].capacity,0)/routes.length:0,onTime:assigned.length?assigned.filter(o=>o.finish<=o.close+1e-9).length/assigned.length:0,coverage:orders.length?served/orders.length:0,fleet};
 }
 export function positionAt(route, minute) {
   let origin=DEPOT, departure=route.depart;

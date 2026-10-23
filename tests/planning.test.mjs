@@ -171,3 +171,19 @@ test('Pasig receiving overrides do not alter other distributor proxy allocations
   const changed=regionalAllocation({...copy(defaults),receivingHours:{'RET-001':{open:480,close:1020,closed:true}}});
   assert.deepEqual(changed.filter(r=>r.name!=='Pasig'),baseline.filter(r=>r.name!=='Pasig'));
 });
+
+test('average drops counts assigned frozen/dry stops and excludes unused vehicles', () => {
+  const c=copy(defaults);
+  const mixed=generateOrders(c).find(o=>o.cold&&o.quantities.some((q,i)=>i!==1&&q>0));
+  const result=plan([mixed],c,{A:5,B:5});
+  assert.equal(result.deliveryAssigned,2);
+  assert.equal(result.routes.length,2);
+  assert.equal(result.averageDrops,1);
+  const normal=generateOrders(c), planned=plan(normal,c,allocate(normal,c));
+  assert.equal(planned.averageDrops,planned.routes.reduce((sum,r)=>sum+r.stops.length,0)/planned.routes.length);
+});
+
+test('average drops is zero with no used vehicles', () => {
+  assert.equal(plan(generateOrders(defaults),defaults,{A:0,B:0}).averageDrops,0);
+  assert.equal(plan([],defaults,{A:5,B:5}).averageDrops,0);
+});
