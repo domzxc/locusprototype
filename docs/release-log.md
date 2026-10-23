@@ -15,3 +15,7 @@
 Use [Deploy to Render](https://render.com/deploy?repo=https://github.com/domzxc/locusprototype) to open the repository's Blueprint in your Render account. Review the single static-site resource and deploy it. Alternatively, connect the Render integration to continue deployment from this chat.
 
 Applied JSON settings remain local to each browser origin. Export settings from localhost and import them at the Render URL; hosting does not automatically transfer browser storage or turn it into a shared database.
+
+## 23 October 2026: retailer-management update
+
+Added synthetic retailer profile management and a separate ten-record Metro Manila public reference catalog. Existing receiving windows migrate into editable profiles. Applied active Pasig profiles drive the demo; public references stay out of dispatch. Added data source/workflow notes, schema tests and a browser-QA checklist. Twenty-five automated tests and the production build pass; browser and hosted verification remain outstanding. This update does not establish verified retailer receiving schedules or current branch operation.

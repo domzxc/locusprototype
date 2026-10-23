@@ -17,8 +17,9 @@ Implemented the browser-only React dispatch app, MapLibre map and simulated play
 | src/styles.css, src/palette.ts | Responsive interface and route colors |
 | src/types.ts, engine.d.ts | Product loading configuration and typed engine boundary |
 | engine.js | Peak case accounting, separate frozen/dry jobs, parent-order completion, receiving-hour validation/enforcement, regional sizing proxy and modeled GPS |
-| src/RetailerHours.tsx | Searchable same-day receiving schedule editor, closed status and explicit stress example |
-| tests/planning.test.mjs | Seventeen meaningful planning/validation tests |
+| src/RetailerManagement.tsx | Synthetic profile CRUD/archive, receiving schedules, validated import/export and separate public-reference catalog; replaces RetailerHours.tsx |
+| src/data/metro-manila-retailer-references.json | Ten source-attributed public address references; receiving windows and verified coordinates deliberately null |
+| tests/planning.test.mjs, tests/retailers.test.mjs | Twenty-five meaningful planning, master-data and provenance-boundary tests |
 | .gitignore | Exclude environment variants and local tool/settings directories |
 | README.md, docs | Usage, approach equations, baseline results, panel defence, deployment and this record |
 
@@ -26,7 +27,7 @@ Implemented the browser-only React dispatch app, MapLibre map and simulated play
 
 | Command | Outcome |
 |---|---|
-| npm test | 17 tests passed, zero failures after the receiving-hour and segregation changes |
+| npm test | 25 tests passed, zero failures after the retailer-management changes |
 | npm run build | TypeScript passed; Vite production build succeeded. Known large MapLibre chunk warning |
 | node --input-type=module baseline calculation | Normal 2 A + 6 B, 8 used, 93 fully planned parent orders, 1 partial, 118/125 jobs, 164.921 km, PHP 14,892.953; peak 3 A + 10 B, 12 used, 100 fully planned, 125/125 jobs, 184.970 km, PHP 20,736.425 |
 | node --input-type=module receiving-hour stress calculation | Default seed with first 5 retailers closed and next 10 given 15-minute windows: 84 fully planned orders, 16 incomplete including 2 partial, 107/125 jobs assigned, all 5 closed retailers remain incomplete |
@@ -63,6 +64,8 @@ Only Pasig is daily routed. Other distributors are selectable for allocation sum
 
 ## Review
 
+Retailer management: implemented a dedicated navigation page with up to 500 synthetic profiles, stable IDs, editable names/addresses/cities/distributor assignments/coordinates, one same-day receiving interval, active/archive status, closed-day flag and notes. Applied active Pasig profiles feed generated orders; archived and non-Pasig profiles do not silently become Pasig demand. The original unedited 100-profile master preserves the original baseline. JSON replacement is validated atomically and clears old receiving overrides; legacy settings remain usable. A regression test caught that spreading legacy receiving entries could alter profile identity; overrides now copy only opening, closing and closed fields. The seeded generator still consumes archived records so archiving does not change remaining baskets. Map bounds now include edited/assigned/unassigned points. The small public merchant-directory sample is separate from dispatch; unknown receiving times and coordinates are not fabricated. The app runs no live directory lookup/geocoding. Added source and workflow notes in retailer-management.md. Browser interaction/layout tests remain unavailable.
+
 Publication preparation: the user explicitly authorized `https://github.com/domzxc/locusprototype.git`. Verified the remote was empty, initialized a local release branch and selected application files explicitly, leaving the archived development skill library and legacy local scaffold outside the publication set. Retested all 17 planning checks and built successfully. Added Node 24 selection and Render's lockfile-install/test/build command. Render's plugin was discovered but is not yet installed/connected; no hosted URL or successful Render deploy is claimed. Documented browser-local JSON persistence and manual localhost-to-hosted settings transfer. GitHub publication status is recorded in the release log after remote verification.
 
 Publication verified: initial application commit `e5adb987dc8bbc462397f33e1fa082e237353520` was pushed to `main`; `git ls-remote` matched the local commit, and GitHub's repository API confirmed the public repository and default branch. The local publication branch was then renamed to `main` with tracking retained. Existing GitHub credentials worked after explicitly selecting the `domzxc` account; no new credential was requested or printed. Render remains pending account connection.
@@ -96,7 +99,8 @@ Stage 2: self-reviewed compatibility, input validation, schedule consistency, co
 8. Search the order book. Open all navigation views. Test a narrow mobile viewport and keyboard focus.
 9. Inspect runtime console/network, then repeat key checks on the final Render URL after publication.
 10. Select each distributor: view its allocation summary and highlighted row. Use the dropdown at a narrow viewport. Returning to the Pasig dispatch demo must restore Pasig selection; allocation export must identify the selected distributor, and dispatch export must identify Pasig and the separate-frozen-dry policy.
-11. In Data studio edit RET-001 hours and apply; confirm the exported settings preserve them. Mark it closed; it must remain incomplete with a closed reason. Restore generated schedules or load the stress example and Apply (84 full orders at default seed). Reload to check persistence. Old settings without receivingHours must import with an empty override map.
+11. In Retailer management edit RET-001, update the profile in the editor, then Apply master. Verify identity, receiving times and coordinates in orders/map/manifests. Mark it closed; it must remain incomplete. Archive and restore it; verify Pasig demand changes and other baskets stay stable. Load the stress example and Apply (84 full orders at the original defaults). Reload and export/import to check persistence. Old settings without a master remain valid.
+12. Add a synthetic profile, assign it to another distributor and verify it stays in the catalog while being excluded from Pasig dispatch. Test duplicate-ID, invalid-coordinate and reversed-time imports without replacing good data. Inspect the Metro Manila reference tab and download its JSON; receiving windows must say unknown and direct import into the synthetic master must fail.
 
 ## Rollback
 

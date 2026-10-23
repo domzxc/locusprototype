@@ -27,16 +27,31 @@ export function distance(a, b) {
 }
 export function generateOrders(c, scenario = 'normal') {
   const rand = rng(c.seed), mult = scenario === 'peak' ? c.peak : 1;
-  return Array.from({length:c.orders}, (_,i) => {
-    const zone = i % c.zones.length, z = c.zones[zone];
+  const roster=c.retailers;
+  return Array.from({length:roster?.length??c.orders}, (_,i) => {
+    const retailer=roster?.[i];
+    const zone = retailer?.zone??(i % c.zones.length), z = c.zones[zone];
     const quantities = PRODUCTS.map((_,p) => Math.ceil((p === 1 ? (rand() < .28 ? 1 + Math.floor(rand()*3) : 0) : Math.floor(rand()*4)) * mult));
     if (!quantities.some(Boolean)) quantities[0] = 1;
     const volume = quantities.reduce((s,q,p) => s + q * PRODUCT_VOLUME[p],0);
     const weight = quantities.reduce((s,q,p) => s + q * PRODUCT_WEIGHT[p],0);
     const open = [480,540,600,660][Math.floor(rand()*4)];
-    const receiving = c.receivingHours?.[`RET-${String(i+1).padStart(3,'0')}`];
-    return {id:`RET-${String(i+1).padStart(3,'0')}`,name:`${['Sari-sari','Family Mart','Mini Grocery','Trading Store'][i%4]} ${i+1}`,zone,area:z.name,lng:z.lng+(rand()-.5)*.014,lat:z.lat+(rand()-.5)*.014,quantities,volume,weight,cold:quantities[1]>0,open:receiving?.open??open,close:receiving?.close??Math.min(1020,open+240),receivingClosed:receiving?.closed??false,service:c.stopBase+quantities.reduce((s,q,p)=>s+q*(c.service[p]+c.loadService[p]),0)};
+    const id=retailer?.id??`RET-${String(i+1).padStart(3,'0')}`;
+    const receiving = c.receivingHours?.[id];
+    const order={id,name:`${['Sari-sari','Family Mart','Mini Grocery','Trading Store'][i%4]} ${i+1}`,zone,area:z.name,lng:z.lng+(rand()-.5)*.014,lat:z.lat+(rand()-.5)*.014,quantities,volume,weight,cold:quantities[1]>0,open:receiving?.open??retailer?.open??open,close:receiving?.close??retailer?.close??Math.min(1020,open+240),receivingClosed:receiving?.closed??retailer?.closed??false,service:c.stopBase+quantities.reduce((s,q,p)=>s+q*(c.service[p]+c.loadService[p]),0)};
+    return retailer?{...order,name:retailer.name,address:retailer.address,lng:retailer.lng,lat:retailer.lat}:order;
+  }).filter((_,i)=>!roster||(roster[i].enabled&&roster[i].distributor==='Pasig'));
+}
+export function getRetailers(c) {
+  if(c.retailers) return copy(c.retailers).map(r=>{
+    const hours=c.receivingHours?.[r.id];
+    return {...r,open:hours?.open??r.open,close:hours?.close??r.close,closed:hours?.closed??r.closed};
   });
+  return generateOrders({...c,retailers:undefined}).map(o=>({id:o.id,name:o.name,address:`Synthetic delivery point in ${o.area}`,city:'Pasig',distributor:'Pasig',zone:o.zone,lng:o.lng,lat:o.lat,enabled:true,open:o.open,close:o.close,closed:o.receivingClosed,synthetic:true,notes:'Assumed receiving window for the synthetic demo day.'}));
+}
+export function importRetailerMaster(value,c) {
+  if(!value||value.kind!=='domtransport-retailer-master'||value.version!==1||value.synthetic!==true||!Array.isArray(value.retailers)) throw Error('Use a version 1 synthetic retailer master export. Public reference catalogs cannot be imported as dispatch data.');
+  return validateConfig({...c,retailers:copy(value.retailers),receivingHours:{}});
 }
 export function splitOrders(orders,c) {
   return orders.flatMap(order=>{
@@ -138,8 +153,9 @@ export const DISTRIBUTORS = [
 ];
 export function regionalAllocation(c) {
   return DISTRIBUTORS.map(d=>{
-    const config={...c,orders:Math.max(1,Math.round(c.orders*d.retailers/5000)),receivingHours:d.name==='Pasig'?c.receivingHours:{}};
-    return {...d,daily:config.orders,normal:allocate(generateOrders(config),config),peak:allocate(generateOrders(config,'peak'),config)};
+    const config={...c,orders:Math.max(1,Math.round(c.orders*d.retailers/5000)),receivingHours:d.name==='Pasig'?c.receivingHours:{},retailers:d.name==='Pasig'?c.retailers:undefined};
+    const normal=generateOrders(config), peak=generateOrders(config,'peak');
+    return {...d,daily:normal.length,normal:allocate(normal,config),peak:allocate(peak,config)};
   });
 }
 export function validateConfig(c) {
@@ -156,7 +172,19 @@ export function validateConfig(c) {
   if(c.receivingHours!==undefined) {
     if(!c.receivingHours || typeof c.receivingHours!=='object' || Array.isArray(c.receivingHours) || Object.keys(c.receivingHours).length>500) throw Error('Receiving hours must contain up to 500 retailer entries.');
     for(const [id,h] of Object.entries(c.receivingHours)) {
-      if(!/^RET-\d{3}$/.test(id) || !h || !Number.isInteger(h.open) || !Number.isInteger(h.close) || !finite(h.open,0,1439) || !finite(h.close,1,1439) || h.open>=h.close || typeof h.closed!=='boolean') throw Error(`Invalid receiving hours for ${id}: use an opening time before closing time on the same day.`);
+      if(!/^RET-\d{3,6}$/.test(id) || !h || !Number.isInteger(h.open) || !Number.isInteger(h.close) || !finite(h.open,0,1439) || !finite(h.close,1,1439) || h.open>=h.close || typeof h.closed!=='boolean') throw Error(`Invalid receiving hours for ${id}: use an opening time before closing time on the same day.`);
+    }
+  }
+  if(c.retailers!==undefined) {
+    if(!Array.isArray(c.retailers)||c.retailers.length>500) throw Error('Use at most 500 synthetic retailer profiles.');
+    const ids=new Set();
+    for(const r of c.retailers) {
+      if(!r||!/^RET-\d{3,6}$/.test(r.id)||ids.has(r.id)) throw Error('Retailer IDs must be unique RET- identifiers with 3 to 6 digits.');
+      ids.add(r.id);
+      if(r.synthetic!==true||typeof r.name!=='string'||!r.name.trim()||r.name.length>100||typeof r.address!=='string'||r.address.length>200||typeof r.city!=='string'||!r.city.trim()||r.city.length>80) throw Error(`Invalid synthetic retailer identity for ${r.id}.`);
+      if(!DISTRIBUTORS.some(d=>d.name===r.distributor)||!Number.isInteger(r.zone)||!finite(r.zone,0,c.zones.length-1)||!finite(r.lng,120.5,121.5)||!finite(r.lat,14,15.4)) throw Error(`Invalid distributor, traffic zone or Greater Manila coordinates for ${r.id}.`);
+      if(typeof r.enabled!=='boolean'||typeof r.closed!=='boolean'||!Number.isInteger(r.open)||!Number.isInteger(r.close)||!finite(r.open,0,1439)||!finite(r.close,1,1439)||r.open>=r.close) throw Error(`Invalid active status or same-day receiving window for ${r.id}.`);
+      if(r.notes!==undefined&&(typeof r.notes!=='string'||r.notes.length>500)) throw Error(`Notes are too long for ${r.id}.`);
     }
   }
   return {...c,receivingHours:c.receivingHours??{}};

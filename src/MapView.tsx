@@ -43,6 +43,15 @@ export default function MapView({routes,unserved,selected,minute}:{routes:Route[
   },[routes,unserved,selected,ready]);
   useEffect(()=>{
     const m=map.current;
+    if(!m||!ready)return;
+    const points=[...routes.flatMap(r=>r.stops),...unserved];
+    if(!points.length)return;
+    const bounds=new maplibregl.LngLatBounds([DEPOT.lng,DEPOT.lat],[DEPOT.lng,DEPOT.lat]);
+    points.forEach(p=>bounds.extend([p.lng,p.lat]));
+    m.fitBounds(bounds,{padding:45,maxZoom:13,duration:0});
+  },[routes,unserved,ready]);
+  useEffect(()=>{
+    const m=map.current;
     if(!m||!ready) return;
     const markers:maplibregl.Marker[]=[];
     const depot=document.createElement('div'); depot.className='depot-pin';depot.textContent='D';depot.title='Pasig distribution center';

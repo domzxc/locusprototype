@@ -1,0 +1,23 @@
+{
+  "kind": "public-reference-only",
+  "version": 1,
+  "referenceOnly": true,
+  "retrievedOn": "2026-10-23",
+  "sourceTitle": "Maya merchant directory: Robinsons Supermarket",
+  "sourceUrl": "https://www.maya.ph/partner-merchants/grocery/robinsons-supermarket",
+  "scope": "Small factual sample of publicly listed Metro Manila branches. Listing does not establish current operation or a supplier relationship.",
+  "receivingHoursStatus": "Supplier receiving windows are not published in this source. No customer shopping hours are used as receiving hours.",
+  "coordinatesStatus": "No verified coordinates were supplied by this source. Coordinates are intentionally omitted.",
+  "records": [
+    {"id":"REF-001","name":"Robinsons Supermarket Ermita","city":"Manila","address":"Robinsons Place Manila, Adriatico Street, Ermita","receivingWindows":null,"coordinates":null},
+    {"id":"REF-002","name":"Robinsons Supermarket Otis","city":"Manila","address":"Paz Guazon Street, Paco","receivingWindows":null,"coordinates":null},
+    {"id":"REF-003","name":"Robinsons Supermarket Congressional","city":"Quezon City","address":"Jupiter Street at Congressional Avenue, Bahay Toro","receivingWindows":null,"coordinates":null},
+    {"id":"REF-004","name":"Robinsons Supermarket Timog","city":"Quezon City","address":"Timog Avenue at Panay Avenue, Paligsahan","receivingWindows":null,"coordinates":null},
+    {"id":"REF-005","name":"Robinsons Supermarket Magnolia","city":"Quezon City","address":"Aurora Boulevard at Dona Hemady Street, New Manila","receivingWindows":null,"coordinates":null},
+    {"id":"REF-006","name":"Robinsons Supermarket Metroeast","city":"Pasig","address":"Robinsons Place Metroeast, Marcos Highway at Felix Avenue, Dela Paz","receivingWindows":null,"coordinates":null},
+    {"id":"REF-007","name":"Robinsons Supermarket Mercedes","city":"Pasig","address":"613 Mercedes Avenue, San Miguel","receivingWindows":null,"coordinates":null},
+    {"id":"REF-008","name":"Robinsons Supermarket Acacia Escalades","city":"Pasig","address":"Calle Industria at Amang Rodriguez Avenue, Manggahan","receivingWindows":null,"coordinates":null},
+    {"id":"REF-009","name":"Robinsons Supermarket Mandaluyong","city":"Mandaluyong","address":"California Garden Square, Libertad Street at Calbayog","receivingWindows":null,"coordinates":null},
+    {"id":"REF-010","name":"Robinsons Supermarket Merville","city":"Paranaque","address":"Edison Avenue at West Service Road, Merville","receivingWindows":null,"coordinates":null}
+  ]
+}

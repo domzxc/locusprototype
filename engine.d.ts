@@ -1,4 +1,4 @@
-import type { Config, Order, Plan, Point, Route, VehicleType } from './src/types';
+import type { Config, Order, Plan, Point, Retailer, Route, VehicleType } from './src/types';
 export const DEPOT: Point;
 export const PRODUCTS: string[];
 export const PRODUCT_VOLUME: number[];
@@ -7,6 +7,8 @@ export const defaults: Config;
 export function copy<T>(value:T):T;
 export function distance(a:Point,b:Point):number;
 export function generateOrders(c:Config,scenario?:string):Order[];
+export function getRetailers(c:Config):Retailer[];
+export function importRetailerMaster(value:unknown,c:Config):Config;
 export function splitOrders(orders:Order[],c:Config):Order[];
 export function allocate(orders:Order[],c:Config):{A:number;B:number};
 export function plan(orders:Order[],c:Config,fleet:{A:number;B:number}):Plan;

@@ -1,6 +1,6 @@
 # DomTransport · Manila dispatch lab
 
-A browser-only FMCG fleet allocation and daily dispatch prototype. React, TypeScript, Vite and MapLibre; no backend, credentials or runtime AI service. All demand, locations and GPS positions are synthetic. Routes are heuristic sequences with estimated connections, not road directions or proven optimal solutions.
+A browser-only FMCG fleet allocation and daily dispatch prototype. React, TypeScript, Vite and MapLibre; no backend, credentials or runtime AI service. Dispatch demand, retailer profiles, locations and GPS positions are synthetic. A separate public reference catalog lists sourced branch names/addresses and is excluded from dispatch. Routes are heuristic sequences with estimated connections, not road directions or proven optimal solutions.
 
 ## Run locally
 
@@ -25,9 +25,10 @@ The Vite build in `dist` is the deployment artifact. Node 24 is selected for Ren
 - **Dispatch planner:** 100 seeded Pasig orders by default, five SKUs, cold-only compatibility, volume and weight capacity, full-service windows, shift return and an illustrative truck restriction. Normal/peak scenarios; fleet overrides reveal unassigned orders. Select a vehicle, inspect its manifest and scrub or play modeled GPS.
 - **Fleet allocation:** normal and peak Type A/B counts for six distributors covering an assumed 50,000 mapped retailers. Click any distributor in the sidebar or use the allocation-page selector to view its figures and highlight its row. Regional estimates transfer Pasig workload assumptions; only Pasig has a route-feasibility demo.
 - **Data studio:** traffic by zone, speed and detour, per-product loading/unloading time, vehicle payload/cost, shift, demand and a vehicle-type restriction. Apply validates and recalculates. Import/export settings for portability.
+- **Retailer management:** add/edit synthetic profiles, addresses, distributor assignments, coordinates, receiving windows and closed-day status; archive/restore; search and JSON import/export. A separate tab provides ten source-linked Metro Manila public reference records, with unknown receiving hours and coordinates left empty.
 - **Panel guide:** demo timing, model rationale, tradeoffs and Q&A.
 
-Data studio also manages every Pasig retailer's receiving opening/closing time and closed-day status. Apply edits to recalculate routes, or load the labeled receiving-hours stress example. These are synthetic same-day schedules, not a verified retailer calendar.
+The dedicated Retailer management page now handles receiving schedules previously shown in Data studio. Apply the master to recalculate routes, or load the labeled receiving-hours stress example. These are synthetic same-day schedules, not a verified retailer calendar. See [retailer data guide](docs/retailer-management.md) for the workflow, public data source and JSON formats.
 
 Frozen and dry products travel separately: Type A carries only ice cream; Type B carries only the other four SKUs. Mixed baskets generate two delivery jobs, while the original order book still contains 100 retailer orders. Full order coverage requires all jobs of that order to be assigned. Partially planned orders remain in the incomplete-order list. Assigned-job window compliance is a modeled planning measure; actual deliveries are not tracked. Dispatch and allocation exports use version 2 to reflect the segregation policy and order/job accounting; settings exports remain backward-compatible version 1, with receiving hours added as an optional imported field.
 
