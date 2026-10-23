@@ -1,6 +1,6 @@
 # GitHub and Render handoff
 
-Prepared 23 October 2026. The user has now explicitly authorized publishing to [domzxc/locusprototype](https://github.com/domzxc/locusprototype), targeting branch `main`. The workspace initially had no Git repository; the remote was empty when inspected. Render deployment requires an authenticated Render account. A Render integration is available but has not yet been connected in this session.
+Prepared 23 October 2026. Published to [domzxc/locusprototype](https://github.com/domzxc/locusprototype), branch `main`, under the user's explicit instruction. The initial push was verified against the remote branch and GitHub repository metadata; see [release log](release-log.md). Render deployment requires an authenticated Render account. A Render integration is available but has not yet been connected in this session.
 
 ## Release checks
 

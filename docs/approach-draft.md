@@ -162,4 +162,4 @@ Production next steps: obtain real data under proper access controls, geocode/va
 
 ## 10. Submission and review
 
-Review the assumptions, narrative and results before creating the final PDF. After completed review, publish the application source to GitHub, connect a Render Static Site, verify the deployed app, then include the finalized approach PDF, GitHub link and live app link in the submission. No email has been sent, no public repository has been created and no hosted service has been deployed as part of this draft.
+Review the assumptions, narrative and results before creating the final PDF. The user has explicitly authorized source publication, and the code is now at [domzxc/locusprototype](https://github.com/domzxc/locusprototype). Render account connection and hosted smoke testing remain pending. After deployment, include the finalized approach PDF, GitHub link and verified live app link in the submission. No email has been sent and no hosted service has been deployed from this session; see the release log for publication evidence.
