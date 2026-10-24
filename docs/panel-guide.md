@@ -142,3 +142,10 @@ Say: "The model is ready at 6:25 AM after preparation. Our editable illustrative
 ## Why peak orders and cost now rise in the proposed plan
 
 The earlier model enlarged baskets without increasing transactions. A constrained fleet could deliver less and spend less, so that operating figure did not describe the cost of serving full peak demand. [Peak planning](peak-planning.md) now separates current-resource shortfall from a proposed seasonal truck/crew package. Defaults increase 100 normal orders to 150 peak orders (200 becomes 300), enlarge baskets by 1.6x and allow two additional working hours. Receiving hours stay binding. The default six-depot approximate proposed plan has 900 orders and PHP 240,011.73 operating cost, versus 600 and PHP 117,463.63 normally. These are assumptions and simulated outcomes, not historical forecasts or quotations. Do not claim spending must always rise: lower constrained spending with unserved demand is a service failure indicator, not a saving.
+
+
+## Review which orders fit and which need action
+
+Depot planning now uses one tab per distributor, with unapplied drafts retained while switching tabs on that page. In Dispatch, open Operations review. Served (planned) requires both frozen/dry portions of a mixed order to be assigned. Unserved / incomplete includes the partial subset; inspect its missing-portion reason and available crews before adding vehicles. Priority is earlier receiving close first, not the vehicle visit order.
+
+Inspect vehicle, arrival, service start and finish together. A truck arriving at 12:00 with unloading still required cannot be on time for a window closing at 12:00. The model checks full handling, not arrival alone. Retailer type is inferred from demo names, and unloading is a required allowance. Say explicitly that these are planned outcomes, not actual delivery confirmations. [Operations review notes](operations-review.md) explain all columns and the default 93 served / 7 incomplete split.

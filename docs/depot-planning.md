@@ -2,7 +2,7 @@
 
 Open **Depot planning** in the sidebar, **Edit depot orders & current trucks** on Network overview, or **Change depot orders & trucks** in Dispatch.
 
-Each depot card provides order/truck inputs plus attendance controls with minus/plus buttons and direct number entry:
+Select a depot tab to show its controls. Sidebar/workspace selection stays synchronized. Drafts remain in their tab until you leave this page; Apply to save each depot. Each depot card provides order/truck inputs plus attendance controls with minus/plus buttons and direct number entry:
 
 - Orders for the demo day: 0-500 parent retailer orders.
 - Current Type A refrigerated vans in the physical fleet: 0-500.
@@ -50,3 +50,5 @@ Apply the depot card to save attendance alongside orders and trucks. Network ove
 Unavailable trucks remain physical assets and retain the modeled idle vehicle allowance. Staff wages, paid absences, replacement labor and headcount-based payroll are not separately modeled; the existing per-vehicle overtime allowance is unchanged. Spare present staff do not generate vehicles, and staff attendance remains recorded even on a zero-truck or zero-order day.
 
 Worked approximate Pasig example (default 100 orders): 2 A + 6 B physical trucks with full attendance fully plan 93 orders. Keeping those trucks but reducing present Type B helpers from 6 to 3 (one helper/truck) leaves 2 A + 3 B crew-ready trucks, fully plans 47 orders and incurs PHP 2,400 idle allowance for the three blocked dry trucks. These are deterministic model outputs, not observed attendance or delivery performance. Road validation can reduce coverage further.
+
+See [Operations review](operations-review.md) for depot tab behavior and the Dispatch served/incomplete order lists.

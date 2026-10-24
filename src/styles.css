@@ -423,3 +423,26 @@ footer>span:last-child{text-align:right}
 .kpi-grid.network-kpis{grid-template-columns:repeat(3,minmax(0,1fr))}
 @media(max-width:900px){.kpi-grid.network-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:560px){.kpi-grid.network-kpis{grid-template-columns:1fr}}
+
+.depot-tabs,.review-filters{display:flex;gap:8px;flex-wrap:wrap;margin:16px 0}
+.depot-tabs button,.review-filters button{padding:10px 15px;border:1px solid #e2ddee;border-radius:7px;background:white;color:#493660;font-size:12px}
+.depot-tabs button[aria-selected=true],.review-filters button.selected{background:#3363ff;color:white;border-color:#3363ff}
+.depot-tabs button:focus-visible,.review-filters button:focus-visible{outline:3px solid #aabaff;outline-offset:2px}
+.depot-tab-panel[hidden]{display:none}
+.operations-review{margin-bottom:22px}
+.review-filters{padding:0 20px}
+.review-filters span{margin-left:5px;font-weight:700}
+.review-help{padding:0 20px;color:#766a91;font-size:11px;line-height:1.7;margin:14px 0}
+.review-table{max-height:600px}
+.review-table th{position:sticky;top:0;z-index:1}
+.review-table td{vertical-align:top;min-width:100px}
+.review-table td:nth-child(5),.review-table td:last-child{min-width:220px;max-width:320px}
+.review-assignment{padding:4px 0;white-space:nowrap;min-height:48px}
+.review-assignment small{display:block}
+.review-status{display:inline-block;padding:4px 8px;border-radius:5px;white-space:nowrap;font-weight:600;background:#fff0e2;color:#855314}
+.review-status.on-time{background:#e9f9f1;color:#087c51}
+.review-status.outside-window,.review-status.unserved{background:#fff0f0;color:#a33242}
+
+.operations-review .card-title{flex-wrap:wrap;align-items:flex-start}
+.operations-review .card-title .field{min-width:220px;max-width:360px;flex:1}
+@media(max-width:650px){.operations-review .card-title .field{width:100%;max-width:none;min-width:0}}

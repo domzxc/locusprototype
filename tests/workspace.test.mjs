@@ -51,3 +51,25 @@ test('peak overview distinguishes proposed resources from saved assets and expla
   }
  }finally{await server.close();}
 });
+
+test('depot tabs expose one active panel and operations review renders parent status and split timing fields',async()=>{
+ const {initializeNetwork}=await import('../network.js');
+ const {defaults,copy,generateOrders,plan}=await import('../engine.js');
+ const root=initializeNetwork(copy(defaults)),server=await createServer({server:{middlewareMode:true,hmr:false},appType:'custom'});
+ try{
+  const {default:DepotPlanning}=await server.ssrLoadModule('/src/DepotPlanning.tsx');
+  for(const name of Object.keys(root.network)){
+   const html=renderToString(createElement(DepotPlanning,{root,selectedDepot:name,onSelect:()=>{},onSave:()=>{},onOpen:()=>{}}));
+   assert.equal((html.match(/role="tab"/g)??[]).length,6);
+   assert.equal((html.match(/aria-selected="true"/g)??[]).length,1);
+   assert.equal((html.match(/role="tabpanel"/g)??[]).length,6);
+   assert.equal((html.match(/hidden=""/g)??[]).length,5);
+   assert.ok(html.includes('Depot planning workspaces'));
+  }
+  const {default:Review}=await server.ssrLoadModule('/src/OperationsReview.tsx');
+  const c=root.network.Pasig,orders=generateOrders(c),result=plan(orders,c,c.currentFleet);
+  const html=renderToString(createElement(Review,{orders,plan:result,config:c})).replace(/<!--[\s\S]*?-->/g,'');
+  for(const label of ['Operations review','Served (planned)','Unserved / incomplete','Arrival (PHT)','Service start (PHT)','Finish (PHT)','CBM / KG','Partially planned','Unserved / unassigned'])assert.ok(html.includes(label),label);
+  assert.ok(html.includes('On time (planned)'));assert.ok(html.includes('Showing 100 of 100 orders'));
+ }finally{await server.close();}
+});

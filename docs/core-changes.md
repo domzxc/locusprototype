@@ -57,3 +57,7 @@ Playback now distinguishes depot preparation from restriction waiting and stays 
 ## Peak demand and seasonal resources
 
 Peak now models more orders (default 1.5x), larger baskets (1.6x) and two additional allowed shift hours. The UI compares an explicit proposed seasonal fleet/crew package with current resources only; actual inventory and attendance are unchanged. This addresses the earlier boxes-only model, whose constrained routes could cost less while missing more orders. Costs remain calculated from routes and resources, with no forced uplift. [Peak planning](peak-planning.md) gives formulas, current results, limits and panel reasoning.
+
+## Depot tabs and operations review
+
+A selected depot now has its own tab panel while all six forms retain page-local drafts. Dispatch replaces duplicate order/exception lists with one searchable parent-order review, including served, incomplete, partial and window diagnostics. Multiple frozen/dry assignments are shown explicitly with per-vehicle arrival/start/finish. Arrival by closing alone is insufficient for on-time service, and actual execution is not fabricated. See [Operations review](operations-review.md) for the calculation and evidence boundaries.
