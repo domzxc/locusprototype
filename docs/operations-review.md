@@ -49,3 +49,11 @@ Unit checks cover parent aggregation, separate cold/dry assignments, partial/inc
 ## Map status during playback
 
 Served (planned) means the full-day assignment is complete. The [GPS status legend](gps-status.md) turns an order green only after every frozen/dry handling finish at the playback clock. Partial and unassigned map exceptions remain orange/red. These are simulated statuses; the prototype still does not record actual proof of delivery.
+
+## Unserved reasons and early depot returns
+
+The current UI calls deliveries excluded from the plan **Unserved (planned)**; partial baskets remain incomplete. The dashboard shows **scheduled portions / total required portions**, then states window compliance only for the scheduled subset and explicitly counts excluded unserved portions. A 100% window check never means all demand is served.
+
+Road exceptions now identify the failed receiving close, service shift deadline, depot-return deadline or search limit, with attempted PHT times. Approximate exceptions distinguish capacity, no trucks, absent crew and final-tour append checks. Reasons describe attempts, not proof that no alternative route could work. See [precise unserved reasons](unserved-diagnostics.md).
+
+**Panel response to trucks back at 3 PM:** ?That is the end of the current single loaded tour, not proof all orders were delivered. The prototype does not reload trucks or retry removed road stops. We inspect failed timings, initial-tour CBM/KG, crew and possible resequencing before concluding we need more trucks. We show early returns and unused shift time explicitly. Actual delivery confirmation is outside this simulation.?

@@ -25,7 +25,7 @@ export interface Config {
   ban: {enabled: boolean; start: number; end: number; type: VehicleType};
 }
 export interface VehicleSpec { capacity: number; weight: number; km: number; fixed: number; }
-export interface Order extends Point {retailerId?:string;id:string; name:string; address?:string; zone:number; area:string; quantities:number[]; volume:number; weight:number; cold:boolean; open:number; close:number; service:number; receivingClosed?:boolean; reason?:string; parentId?:string; shipment?:'frozen'|'dry';}
+export interface Order extends Point {retailerId?:string;id:string; name:string; address?:string; zone:number; area:string; quantities:number[]; volume:number; weight:number; cold:boolean; open:number; close:number; service:number; receivingClosed?:boolean; reason?:string; reasonCode?:string; parentId?:string; shipment?:'frozen'|'dry';}
 export interface Stop extends Order {roadPoint?:Point&{metres:number};arrival:number; finish:number; wait:number; legKm:number; banWait:number;}
 export interface Route {roadLegs?:RoadLeg[];roadProvider?:string;depot?:Point;id:string;type:VehicleType;stops:Stop[];volume:number;weight:number;km:number;banWait:number;depart:number;return:number;cost:number;}
 export interface Plan {staffing:CrewAvailability;travelBasis:'road'|'approximate';costs:CostBreakdown;roadMeta?:{provider:string;validatedAt:string;maximumSnapMetres:number;method:string};routes:Route[];unserved:Order[];unassignedDeliveries:Order[];served:number;partial:number;deliveryTotal:number;deliveryAssigned:number;averageDrops:number;total:number;km:number;cost:number;util:number;onTime:number;coverage:number;fleet:{A:number;B:number};}

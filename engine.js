@@ -1,4 +1,5 @@
 import {crewAvailability,validateAttendance} from './staffing.js';
+import {diagnosePending} from './planning-diagnostics.js';
 import { costDefaults, normalizeCosting, costBreakdown } from './costing.js';
 export const DEPOT = { lng: 121.0705, lat: 14.5764 };
 export const PRODUCTS = ['Toothpaste', 'Ice cream', 'Soap', 'Water purifier', 'Tea'];
@@ -132,7 +133,7 @@ export function plan(orders,c,fleet) {
       } else break; // Identical unused vehicles cannot improve this type's next tour.
     }
   }
-  const unassignedDeliveries=[...pending.values()].map(o=>({...o,reason:o.receivingClosed?'Retailer closed for receiving on this demo day':o.service>o.close-o.open?'Full handling cannot fit retailer receiving window':o.volume>c[o.cold?'A':'B'].capacity || o.weight>c[o.cold?'A':'B'].weight?'Order exceeds compatible vehicle capacity':staffing.fleet[o.cold?'A':'B']===0&&staffing.blocked[o.cold?'A':'B']>0?'No driver/helper crew available for this vehicle type':staffing.blocked[o.cold?'A':'B']>0?'No feasible staffed vehicle / capacity / time-window / shift slot in this heuristic':'No feasible capacity / time-window / shift slot in this heuristic'}));
+  const unassignedDeliveries=[...pending.values()].map(o=>diagnosePending(o,c,fleet,staffing,routes,travel,depot));
   return summarizePlan(orders,c,fleet,routes,unassignedDeliveries);
 }
 export function summarizePlan(orders,c,fleet,routes,unassignedDeliveries) {

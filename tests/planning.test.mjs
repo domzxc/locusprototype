@@ -58,7 +58,7 @@ test('weight capacity binds even when an order fits volume capacity', () => {
   const result=plan(generateOrders(c),c,{A:10,B:10});
   assert.equal(result.served,0);
   assert.equal(result.unserved.length,100);
-  assert.ok(result.unassignedDeliveries.every(o=>o.reason==='Order exceeds compatible vehicle capacity'));
+  assert.ok(result.unassignedDeliveries.every(o=>o.reasonCode==='oversized'&&/Order exceeds compatible vehicle capacity.*CBM.*KG/.test(o.reason)));
 });
 
 test('GPS waits at origin during the illustrative restriction', () => {

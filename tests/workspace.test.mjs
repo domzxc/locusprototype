@@ -69,8 +69,11 @@ test('depot tabs expose one active panel and operations review renders parent st
   const {default:Review}=await server.ssrLoadModule('/src/OperationsReview.tsx');
   const c=root.network.Pasig,orders=generateOrders(c),result=plan(orders,c,c.currentFleet);
   const html=renderToString(createElement(Review,{orders,plan:result,config:c})).replace(/<!--[\s\S]*?-->/g,'');
-  for(const label of ['Operations review','Served (planned)','Unserved / incomplete','Arrival (PHT)','Service start (PHT)','Finish (PHT)','CBM / KG','Partially planned','Unserved / unassigned'])assert.ok(html.includes(label),label);
+  for(const label of ['Operations review','Served (planned)','Unserved / incomplete','Arrival (PHT)','Service start (PHT)','Finish (PHT)','CBM / KG','Partially planned','Unserved (planned)'])assert.ok(html.includes(label),label);
   assert.ok(html.includes('On time (planned)'));assert.ok(html.includes('Showing 100 of 100 orders'));
+  const {default:EarlyReturn}=await server.ssrLoadModule('/src/EarlyReturnReview.tsx');
+  const early=renderToString(createElement(EarlyReturn,{plan:result,config:c}));
+  for(const label of ['Early returns with unserved deliveries','No depot reload, second trip','Unused shift (min)','Unserved compatible portions'])assert.ok(early.includes(label),label);
  }finally{await server.close();}
 });
 
@@ -83,7 +86,7 @@ test('GPS legend distinguishes scheduled, in-progress, simulated served and plan
   const {default:Legend}=await server.ssrLoadModule('/src/MapStatusLegend.tsx');
   for(const minute of [c.start,c.end]){
    const html=renderToString(createElement(Legend,{states:playbackOrderStates(timeline,minute),enabled:true})).replace(/<!--[\s\S]*?-->/g,'');
-   for(const label of ['Scheduled','In progress','Served (simulated)','Partially planned','Unassigned','not a confirmed delivery'])assert.ok(html.includes(label),label);
+   for(const label of ['Scheduled','In progress','Served (simulated)','Partially planned','Unserved (planned)','not a confirmed delivery'])assert.ok(html.includes(label),label);
    assert.ok(html.includes(minute===c.start?'Served (simulated) <strong>0</strong>':`Served (simulated) <strong>${p.served}</strong>`));
   }
  }finally{await server.close();}

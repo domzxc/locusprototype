@@ -73,3 +73,10 @@ Added six linked depot tabs, a selected-depot workspace selector and hidden/moun
 ## 24 October 2026: visible GPS order and truck statuses
 
 Replaced route-colored order dots with shape/color status icons and a live-count legend. Added per-parent simulated finish thresholds across both temperatures, persistent partial/unassigned exceptions, safe-text click details and overlapping-order lists. Truck pins show preparing, travel, store/ban waiting, handling and returned states. Routes retain vehicle colors; status features update only when their state changes. No actual delivery confirmations, routing changes or cost changes were added.
+
+## 24 October 2026: precise unserved diagnostics
+
+- Replaced combined road/window/shift text with failed attempt times and distinct reason codes; unresolved search limits remain explicit.
+- Added approximate final-tour capacity/window/return screening and an early-return review table. No routes were changed or extra deliveries assumed feasible.
+- Renamed map/review exceptions Unserved (planned); window card now exposes planned/required delivery portions and excluded unserved counts.
+- No backend, live traffic, second tours or delivery-confirmation events were added. See unserved-diagnostics.md and verification.md.

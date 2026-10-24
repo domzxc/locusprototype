@@ -153,3 +153,11 @@ Inspect vehicle, arrival, service start and finish together. A truck arriving at
 ## Explain the GPS colors
 
 Blue is scheduled, purple is in progress, green-check is fully served in the simulation, orange is partial planning and red-cross is unassigned. A mixed order needs both frozen and dry portions finished to turn green. Click an icon for its timing and missing reason. Rewind to demonstrate that these statuses follow the simulated clock rather than recording actual deliveries. Truck pins separately label travelling, handling, store/ban waiting, preparation and return. See [GPS status notes](gps-status.md).
+
+## Unserved reasons and early depot returns
+
+The current UI calls deliveries excluded from the plan **Unserved (planned)**; partial baskets remain incomplete. The dashboard shows **scheduled portions / total required portions**, then states window compliance only for the scheduled subset and explicitly counts excluded unserved portions. A 100% window check never means all demand is served.
+
+Road exceptions now identify the failed receiving close, service shift deadline, depot-return deadline or search limit, with attempted PHT times. Approximate exceptions distinguish capacity, no trucks, absent crew and final-tour append checks. Reasons describe attempts, not proof that no alternative route could work. See [precise unserved reasons](unserved-diagnostics.md).
+
+**Panel response to trucks back at 3 PM:** ?That is the end of the current single loaded tour, not proof all orders were delivered. The prototype does not reload trucks or retry removed road stops. We inspect failed timings, initial-tour CBM/KG, crew and possible resequencing before concluding we need more trucks. We show early returns and unused shift time explicitly. Actual delivery confirmation is outside this simulation.?

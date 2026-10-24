@@ -8,7 +8,7 @@ The map uses **order status icons** instead of vehicle-colored delivery dots. Ve
 | Purple progress circle | In progress | Fully assigned and at least one portion has arrived (including store waiting/handling), or some portions have finished |
 | Green check | Served (simulated) | Every required portion is assigned and every full handling finish is at/before the playback clock |
 | Orange diamond / ! | Partially planned | Some required delivery portions are missing; this never becomes fully served merely because the assigned portion finished |
-| Red cross | Unassigned | No delivery portion has a route assignment; no arrival or finish time is invented |
+| Red cross | Unserved (planned) | No delivery portion has a route assignment; no arrival or finish time is invented |
 
 Partial and unassigned exceptions stay fully visible when selecting a vehicle; other routes' normally planned orders can be dimmed. Each icon includes a distinct shape/glyph, not color alone. Green signifies simulated completion, not a real delivery receipt. On-time compliance remains governed by the route engine's full-window constraints.
 
@@ -44,3 +44,7 @@ Pin colors distinguish movement, handling, waiting, preparation and return. Thei
 playback-status.js prepares parent/vehicle timing data once per plan and derives status from the playback minute. MapLibre order features update only when state/finished count, route selection or the plan changes; static road geometry is not resent on every GPS tick. Existing truck marker elements are reused. Generated icons follow the official [MapLibre generated icon API example](https://maplibre.org/maplibre-gl-js/docs/examples/add-a-generated-icon-to-the-map/); no additional icon/font service is called.
 
 Tests cover both-temperature finish thresholds, partial/unassigned persistence, no invented unassigned timestamps, count conservation, final coverage agreement, rewind/empty days and independent repeat peak transactions. SSR verifies the legend labels and zero-versus-final simulated served count. Production build validates the MapLibre types. Browser/WebGL rendering, popup hit testing, overlap ordering, map icon legibility and real playback clicks remain unverified because the supported browser inventory is empty. No routing, cost, saved settings schema or actual completion database is changed. Rollback is a normal feature revert.
+
+## Precise reasons and early returns
+
+Red now says **Unserved (planned)** rather than Unassigned. It means no portion is scheduled, not a confirmed real-world failed handover. Orange remains partially planned. The [diagnostic guide](unserved-diagnostics.md) explains attempted receiving/shift times, search-limit exceptions, and why trucks can return early with orders still unserved.

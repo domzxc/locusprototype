@@ -3,7 +3,7 @@ export const ORDER_STATUS={
   'in-progress':{label:'In progress',color:'#7c3aed',symbol:'◐',rank:2},
   served:{label:'Served (simulated)',color:'#15803d',symbol:'✓',rank:0},
   partial:{label:'Partially planned',color:'#b45309',symbol:'!',rank:3},
-  unserved:{label:'Unassigned',color:'#b91c1c',symbol:'×',rank:4}
+  unserved:{label:'Unserved (planned)',color:'#b91c1c',symbol:'×',rank:4}
 };
 export function createPlaybackOrders(orders,routes,unserved){
   const assignments=new Map(),reasons=new Map(unserved.map(o=>[o.id,o.reason??'Not fully assigned']));

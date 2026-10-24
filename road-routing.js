@@ -1,5 +1,6 @@
 import { copy, DEPOT, summarizePlan } from './engine.js';
 import {crewAvailability} from './staffing.js';
+import {clock} from './planning-diagnostics.js';
 
 export const ROAD_ENDPOINT='https://router.project-osrm.org';
 const abort=signal=>{if(signal?.aborted)throw new DOMException('Road request aborted','AbortError');};
@@ -92,10 +93,10 @@ export async function validateRoadPlan(orders,c,fleet,base,router,{signal,onProg
   const routes=[],missing=new Map(base.unassignedDeliveries.map(j=>[j.id,copy(j)]));
   const staffing=crewAvailability(c,fleet),attempted={A:0,B:0};
   const depot=c.depot??DEPOT;let maximumSnap=0;
-  const reject=(job,reason)=>{const {arrival,finish,wait,legKm,banWait,roadPoint,...data}=job;missing.set(job.id,{...data,reason});};
+  const reject=(job,reason,reasonCode)=>{const {arrival,finish,wait,legKm,banWait,roadPoint,...data}=job;missing.set(job.id,{...data,reason,reasonCode});};
   for(const [index,original] of base.routes.entries()) {
     if(attempted[original.type]++>=staffing.fleet[original.type]){
-      for(const job of original.stops)reject(job,'No driver/helper crew or available truck for this vehicle type.');
+      for(const job of original.stops)reject(job,`No crew-ready Type ${original.type} truck available for ${original.id}.`,'no-crew');
       continue;
     }
     abort(signal);let jobs=copy(original.stops),completed=false;
@@ -105,7 +106,7 @@ export async function validateRoadPlan(orders,c,fleet,base,router,{signal,onProg
       if(data.legs.length!==jobs.length+1)throw Error('Road legs do not match vehicle stops.');
       maximumSnap=Math.max(maximumSnap,...data.snaps.map(s=>s.metres));
       const r={...copy(original),stops:[],km:0,banWait:0,volume:0,weight:0,roadLegs:data.legs,roadProvider:data.provider};
-      let time=r.depart,failed=-1;
+      let time=r.depart,failed=-1,failure='',failureCode='';
       for(let i=0;i<=jobs.length;i++) {
         const job=jobs[i], leg=data.legs[i];
         const minutes=leg.minutes*c.traffic*(job?c.zones[job.zone].factor:1);
@@ -114,16 +115,22 @@ export async function validateRoadPlan(orders,c,fleet,base,router,{signal,onProg
         r.km+=leg.km;r.banWait+=banWait;
         if(!job){r.return=rawArrival;break;}
         const arrival=Math.max(rawArrival,job.open),finish=arrival+job.service;
-        if(job.receivingClosed||finish>job.close+1e-9||finish>c.end+1e-9){failed=i;break;}
+        if(job.receivingClosed||finish>job.close+1e-9||finish>c.end+1e-9){
+          failed=i;
+          failureCode=job.receivingClosed?'receiving-closed':finish>job.close+1e-9?'receiving-window':'shift-service';
+          failure=job.receivingClosed?'Retailer closed for receiving.':failureCode==='receiving-window'?`finish ${clock(finish)}; receiving closes ${clock(job.close)} (${Math.ceil(finish-job.close-1e-9)} min late).`:`finish ${clock(finish)} exceeds shift end ${clock(c.end)}.`;
+          failure=`Road check ${r.id}, attempted stop ${i+1}: ${failure} Arrival ${clock(rawArrival)}, service start ${clock(arrival)}, handling ${job.service.toFixed(1)} min; incoming driving ${minutes.toFixed(1)} min, store wait ${(arrival-rawArrival).toFixed(1)} min, truck-ban wait ${banWait.toFixed(1)} min. This sequence failed; alternative placement was not tested.`;
+          break;
+        }
         r.stops.push({...job,arrival,finish,wait:arrival-rawArrival,legKm:leg.km,banWait,roadPoint:data.snaps[i+1]});
         r.volume+=job.volume;r.weight+=job.weight;time=finish;
       }
-      if(failed<0&&r.return>c.end+1e-9)failed=jobs.length-1;
-      if(failed>=0){reject(jobs[failed],'Road travel / receiving window / shift return is infeasible in this fixed-sequence validation.');jobs.splice(failed,1);continue;}
+      if(failed<0&&r.return>c.end+1e-9){failed=jobs.length-1;failureCode='shift-return';failure=`Road check ${r.id}: tour returns ${clock(r.return)}; shift ends ${clock(c.end)} (${Math.ceil(r.return-c.end-1e-9)} min late). Removed the last stop in this attempted sequence; alternative placement was not tested.`;}
+      if(failed>=0){reject(jobs[failed],failure,failureCode);jobs.splice(failed,1);continue;}
       if(r.volume>c[r.type].capacity+1e-9||r.weight>c[r.type].weight+1e-9)throw Error('Road route exceeds vehicle capacity.');
       r.cost=c[r.type].fixed+r.km*c[r.type].km;routes.push(r);completed=true;break;
     }
-    if(!completed)for(const job of jobs)reject(job,'Road validation pass limit reached; route remains unassigned.');
+    if(!completed)for(const job of jobs)reject(job,`Road validation stopped after ${maxPasses} pass(es) for ${original.id}. Remaining sequence not tested successfully; feasibility is unresolved. No reinsertion or second tour was attempted.`,'search-limit');
   }
   abort(signal);
   return {...summarizePlan(orders,c,fleet,routes,[...missing.values()]),travelBasis:'road',roadMeta:{provider:'OSRM driving',validatedAt:new Date().toISOString(),maximumSnapMetres:maximumSnap,method:'Existing sequence; reroute after removing infeasible stops. No truck-specific or live-traffic validation.'}};

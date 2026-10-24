@@ -96,3 +96,5 @@ Panel-friendly explanation: the in-app Panel Guide states the problem, how Parts
 
 
 See [depot orders and current trucks](docs/depot-planning.md). Current fleet is now distinct from recommended fleet: peak demand does not automatically create additional vehicles.
+
+Read [unserved diagnostics and early returns](docs/unserved-diagnostics.md) for the distinction between missed receiving deadlines, capacity/crew shortages and unresolved search limits.
