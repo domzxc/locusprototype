@@ -45,3 +45,7 @@ Fresh approximate Pasig defaults produce 100 rows: 93 served/planned and 7 incom
 ## Verification and rollback
 
 Unit checks cover parent aggregation, separate cold/dry assignments, partial/incomplete classification, required unloading, arrival versus service wait, closing-time handling violations, search, review priority, empty days and coverage conservation. SSR checks render all six selected tab states (one active, five hidden), preserve six panel forms in markup and verify review status/timing labels. They do not simulate browser clicks or prove draft retention/focus/layout behavior. Supported browser inventory is empty in this session; interaction and visual QA remain pending. Revert this feature commit to restore the previous layout; no saved data schema migration is required.
+
+## Map status during playback
+
+Served (planned) means the full-day assignment is complete. The [GPS status legend](gps-status.md) turns an order green only after every frozen/dry handling finish at the playback clock. Partial and unassigned map exceptions remain orange/red. These are simulated statuses; the prototype still does not record actual proof of delivery.

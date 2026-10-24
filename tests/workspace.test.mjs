@@ -73,3 +73,18 @@ test('depot tabs expose one active panel and operations review renders parent st
   assert.ok(html.includes('On time (planned)'));assert.ok(html.includes('Showing 100 of 100 orders'));
  }finally{await server.close();}
 });
+
+test('GPS legend distinguishes scheduled, in-progress, simulated served and planning exceptions at each playback boundary',async()=>{
+ const {defaults,copy,generateOrders,plan}=await import('../engine.js');
+ const {createPlaybackOrders,playbackOrderStates}=await import('../playback-status.js');
+ const c=copy(defaults),orders=generateOrders(c),p=plan(orders,c,{A:2,B:6}),timeline=createPlaybackOrders(orders,p.routes,p.unserved);
+ const server=await createServer({server:{middlewareMode:true,hmr:false},appType:'custom'});
+ try{
+  const {default:Legend}=await server.ssrLoadModule('/src/MapStatusLegend.tsx');
+  for(const minute of [c.start,c.end]){
+   const html=renderToString(createElement(Legend,{states:playbackOrderStates(timeline,minute),enabled:true})).replace(/<!--[\s\S]*?-->/g,'');
+   for(const label of ['Scheduled','In progress','Served (simulated)','Partially planned','Unassigned','not a confirmed delivery'])assert.ok(html.includes(label),label);
+   assert.ok(html.includes(minute===c.start?'Served (simulated) <strong>0</strong>':`Served (simulated) <strong>${p.served}</strong>`));
+  }
+ }finally{await server.close();}
+});

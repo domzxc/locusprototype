@@ -446,3 +446,20 @@ footer>span:last-child{text-align:right}
 .operations-review .card-title{flex-wrap:wrap;align-items:flex-start}
 .operations-review .card-title .field{min-width:220px;max-width:360px;flex:1}
 @media(max-width:650px){.operations-review .card-title .field{width:100%;max-width:none;min-width:0}}
+
+.map-status-legend{padding:12px 16px;background:#fafbff;border-block:1px solid #eae7f0}
+.map-status-keys{display:flex;flex-wrap:wrap;gap:8px 18px;font-size:11px;color:#493660}
+.map-status-keys>span{display:flex;align-items:center;gap:5px}
+.order-key{display:inline-grid;place-items:center;width:22px;height:22px;border:2px solid currentColor;border-radius:50%;font-size:16px;background:white}
+.order-key.partial{border-radius:4px}
+.map-status-legend p{font-size:10px;color:#766a91;line-height:1.6;margin:8px 0 0}
+.order-map-popup{max-height:280px;overflow:auto;color:#342842;font-size:11px;line-height:1.55;padding:4px}
+.order-map-popup section{border-bottom:1px solid #eae7f0;padding:9px 0}
+.order-map-popup p{margin:5px 0}
+.truck-pin{text-align:center;min-width:38px}
+.truck-pin small{display:block;font-size:8px;color:white;font-weight:500}
+.truck-pin[data-motion=travelling]{background:#1d4ed8}
+.truck-pin[data-motion=handling]{background:#7c3aed}
+.truck-pin[data-motion=waiting]{background:#92400e}
+.truck-pin[data-motion=preparing]{background:#475569}
+.truck-pin[data-motion=returned]{background:#15803d}

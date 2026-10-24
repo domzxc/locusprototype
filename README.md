@@ -13,6 +13,7 @@ The decision this prototype supports is **how much refrigerated and dry capacity
 | [Approach and mathematical models](docs/approach-draft.md) | Implemented heuristic, proposed production optimization, assumptions and demand-review triggers |
 | [Presentation script](docs/panel-guide.md) | The 30-minute panel narrative and demo sequence |
 | [Road routes and cost estimates](docs/road-routing-and-costs.md) | Road-validation workflow, cost inputs/formulas and observed live-service examples |
+| [GPS status legend](docs/gps-status.md) | Scheduled/in-progress/simulated served icons, partial/unassigned exceptions and truck state labels |
 | [Operations review](docs/operations-review.md) | Depot tabs, served/incomplete lists, split vehicle timings and planned on-time status |
 | [Peak planning](docs/peak-planning.md) | More orders, larger baskets, longer shifts, current versus proposed seasonal resources and cost interpretation |
 | [Verification record](docs/verification.md) | Automated evidence and browser/hosting verification gaps |

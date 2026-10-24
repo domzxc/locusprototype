@@ -69,3 +69,7 @@ Added editable peak order multiplier (1.5x default) and extra shift hours (2 def
 ## 24 October 2026: depot tabs and Operations review
 
 Added six linked depot tabs, a selected-depot workspace selector and hidden/mounted forms to retain unsaved drafts while switching tabs. Added the Dispatch parent-order Operations review with served/planned, incomplete, partial and outside-window filters, search, cases/CBM/KG, required unloading, split vehicles, arrival, service start/finish and exception reasons. Full handling determines planned window compliance. Retailer types are inferred from demo names; actual delivery events are not tracked. The new table replaces the previous duplicate order book and exception list. Planning/cost arithmetic and saved data schemas are unchanged.
+
+## 24 October 2026: visible GPS order and truck statuses
+
+Replaced route-colored order dots with shape/color status icons and a live-count legend. Added per-parent simulated finish thresholds across both temperatures, persistent partial/unassigned exceptions, safe-text click details and overlapping-order lists. Truck pins show preparing, travel, store/ban waiting, handling and returned states. Routes retain vehicle colors; status features update only when their state changes. No actual delivery confirmations, routing changes or cost changes were added.

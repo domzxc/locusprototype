@@ -61,3 +61,7 @@ Peak now models more orders (default 1.5x), larger baskets (1.6x) and two additi
 ## Depot tabs and operations review
 
 A selected depot now has its own tab panel while all six forms retain page-local drafts. Dispatch replaces duplicate order/exception lists with one searchable parent-order review, including served, incomplete, partial and window diagnostics. Multiple frozen/dry assignments are shown explicitly with per-vehicle arrival/start/finish. Arrival by closing alone is insufficient for on-time service, and actual execution is not fabricated. See [Operations review](operations-review.md) for the calculation and evidence boundaries.
+
+## Distinguish served and unserved on GPS playback
+
+Order markers now represent scheduled, in-progress, simulated served, partially planned and unassigned parents. This avoids route colors being mistaken for completion status. Mixed orders require both portions finished before green, while partial/unassigned exceptions remain prominent for any route selection. Click details and truck-state labels explain why a marker is waiting or incomplete. The simulated clock does not become proof of delivery. [GPS status notes](gps-status.md) record rules and verification limits.

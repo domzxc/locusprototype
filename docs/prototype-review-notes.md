@@ -259,3 +259,7 @@ The JSON `route.depart` remains the ready-after-preparation time for compatibili
 ### Depot tabs and per-order operations review
 
 [Operations review](operations-review.md) documents the depot tab draft lifecycle and the combined Dispatch table. Parent orders aggregate all temperature portions; served/incomplete counts match coverage, partial is a subset of incomplete, and window status checks full service. Arrival before store waiting is separate from service start and finish. All outcomes remain modeled. No routing or capacity formula changed.
+
+### GPS order statuses
+
+[GPS status notes](gps-status.md) explain the new parent-order icons and completion thresholds. Operations review describes the whole-day assignment; green GPS markers require full handling of all assigned frozen/dry portions by the playback time. Orange partial and red unassigned exceptions remain visible across route selection, with reasons in safe-text popups. Rewind recomputes status; no actual delivery event is recorded.

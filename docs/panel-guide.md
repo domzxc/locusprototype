@@ -149,3 +149,7 @@ The earlier model enlarged baskets without increasing transactions. A constraine
 Depot planning now uses one tab per distributor, with unapplied drafts retained while switching tabs on that page. In Dispatch, open Operations review. Served (planned) requires both frozen/dry portions of a mixed order to be assigned. Unserved / incomplete includes the partial subset; inspect its missing-portion reason and available crews before adding vehicles. Priority is earlier receiving close first, not the vehicle visit order.
 
 Inspect vehicle, arrival, service start and finish together. A truck arriving at 12:00 with unloading still required cannot be on time for a window closing at 12:00. The model checks full handling, not arrival alone. Retailer type is inferred from demo names, and unloading is a required allowance. Say explicitly that these are planned outcomes, not actual delivery confirmations. [Operations review notes](operations-review.md) explain all columns and the default 93 served / 7 incomplete split.
+
+## Explain the GPS colors
+
+Blue is scheduled, purple is in progress, green-check is fully served in the simulation, orange is partial planning and red-cross is unassigned. A mixed order needs both frozen and dry portions finished to turn green. Click an icon for its timing and missing reason. Rewind to demonstrate that these statuses follow the simulated clock rather than recording actual deliveries. Truck pins separately label travelling, handling, store/ban waiting, preparation and return. See [GPS status notes](gps-status.md).

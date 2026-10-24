@@ -1,0 +1,5 @@
+import {ORDER_STATUS} from '../playback-status.js';
+import type {PlaybackOrderState,PlaybackStatus} from '../playback-status.js';
+export default function MapStatusLegend({states,enabled}:{states:PlaybackOrderState[];enabled:boolean}){
+  return <div className="map-status-legend"><div className="map-status-keys" aria-label="GPS order status legend">{(Object.keys(ORDER_STATUS) as PlaybackStatus[]).map(status=><span key={status}><b className={`order-key ${status}`} style={{color:ORDER_STATUS[status].color}} aria-hidden="true">{ORDER_STATUS[status].symbol}</b>{ORDER_STATUS[status].label} <strong>{states.filter(s=>s.status===status).length}</strong></span>)}</div><p>{enabled?'Order markers change at modeled service times.':'Playback is locked while road routes load; assigned markers remain scheduled.'} Green means all frozen/dry portions finished in this simulation, not a confirmed delivery. Counts cover all depot orders; Operations review shows the full-day plan. Orange/red exceptions stay visible when selecting a vehicle. Click a marker for vehicles, times and missing reasons; overlapping orders are listed together.</p></div>;
+}
