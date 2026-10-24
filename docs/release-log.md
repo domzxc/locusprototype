@@ -80,3 +80,9 @@ Replaced route-colored order dots with shape/color status icons and a live-count
 - Added approximate final-tour capacity/window/return screening and an early-return review table. No routes were changed or extra deliveries assumed feasible.
 - Renamed map/review exceptions Unserved (planned); window card now exposes planned/required delivery portions and excluded unserved counts.
 - No backend, live traffic, second tours or delivery-confirmation events were added. See unserved-diagnostics.md and verification.md.
+
+## 24 October 2026: larger, more readable app typography
+
+- Enlarged main text, table values, settings fields, notes, map labels/popups, navigation and headings using rem units that respect browser font preferences.
+- Darkened secondary text and provided more space through wider panels, larger controls, table spacing and responsive wrapping/scrolling.
+- Preserved planning calculations and browser data. Existing 96 tests pass; production build passes with the known MapLibre chunk warning. Visual browser verification remains pending.
