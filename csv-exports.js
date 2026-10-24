@@ -92,8 +92,8 @@ export function networkRows(runs,scenario,resourceMode,baselineRuns=[]){
 export function allocationRows(regional){
   return regional.map(r=>({distributor:r.name,mapped_retailers:r.retailers,normal_orders:r.daily,peak_orders:r.peakDaily,normal_type_a:r.normal.A,normal_type_b:r.normal.B,peak_type_a:r.peak.A,peak_type_b:r.peak.B,synthetic:true,method:'Volume, weight and workload heuristic; not a calibrated full-network recommendation'}));
 }
-export function dispatchRows(orders,plan,c,scenario,resourceMode){
-  const common={distributor:c.distributor??'Pasig',scenario,resource_mode:scenario==='peak'?resourceMode:'current',synthetic:true,travel_basis:plan.travelBasis,time_zone:'Asia/Manila'},assigned=new Map(),missing=new Map(plan.unassignedDeliveries.map(j=>[j.id,j]));
+export function dispatchRows(orders,plan,c,scenario,resourceMode,experiment={}){
+  const common={...experiment,distributor:c.distributor??'Pasig',scenario,resource_mode:scenario==='peak'?resourceMode:'current',synthetic:true,travel_basis:plan.travelBasis,time_zone:'Asia/Manila'},assigned=new Map(),missing=new Map(plan.unassignedDeliveries.map(j=>[j.id,j]));
   for(const r of plan.routes)r.stops.forEach((s,i)=>assigned.set(s.id,{route:r,stop:s,sequence:i+1}));
   const incomplete=new Set(plan.unserved.map(o=>o.id)),assignedParents=new Set([...assigned.values()].map(a=>a.stop.parentId)),partial=new Set([...incomplete].filter(id=>assignedParents.has(id)));
   const rows=[{...common,record_type:'summary',orders:plan.total,complete_orders:plan.served,incomplete_orders:plan.unserved.length,partial_orders:plan.partial,planned_portions:plan.deliveryAssigned,required_portions:plan.deliveryTotal,available_type_a:plan.fleet.A,available_type_b:plan.fleet.B,crew_ready_type_a:plan.staffing.fleet.A,crew_ready_type_b:plan.staffing.fleet.B,distance_km:plan.km,coverage_pct:plan.coverage*100,scheduled_window_compliance_pct:plan.onTime*100,...Object.fromEntries(Object.entries(plan.costs).map(([key,value])=>[`${key}_php`,value]))}];

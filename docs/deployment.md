@@ -36,3 +36,7 @@ Open the hosted site in a fresh browser. Verify default 100-order plan, normal/p
 Record the repository commit and deployed URL in the final submission. Keep the last known good deployment/commit. To roll back a published release, restore that reviewed version through Render's deployment controls or a normal Git revert and redeploy; do not rewrite shared Git history.
 
 The final email package should contain the reviewed approach PDF, public GitHub source link and live Render app link. Email sending is not part of the currently completed work.
+
+## Public deployment evidence
+
+The user-triggered deployment on 24 October 2026 was observed serving the CSV/filter release at https://domtransport.onrender.com. See [deployment verification](deployment-verification.md) for asset evidence and later-release status. The [approach PDF](../output/pdf/DomTransport-Approach.pdf) and [email draft](submission-email.md) are prepared; no submission email has been sent.

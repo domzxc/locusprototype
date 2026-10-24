@@ -12,4 +12,4 @@ export function readRetailersCsv(text:string):unknown;
 export function selectNetworkRuns(runs:DistributorRun[],scope?:string):DistributorRun[];
 export function networkRows(runs:DistributorRun[],scenario:string,resourceMode:string,baselineRuns?:DistributorRun[]):CsvRow[];
 export function allocationRows(regional:ReturnType<typeof regionalAllocation>):CsvRow[];
-export function dispatchRows(orders:Order[],plan:Plan,c:Config,scenario:string,resourceMode:string):CsvRow[];
+export function dispatchRows(orders:Order[],plan:Plan,c:Config,scenario:string,resourceMode:string,experiment?:CsvRow):CsvRow[];

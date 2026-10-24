@@ -93,3 +93,10 @@ Replaced route-colored order dots with shape/color status icons and a live-count
 - Converted every export to CSV: network, dispatch, allocation, settings backup, retailer editor master and public references. Added CSV import for settings/retailers while retaining legacy JSON import.
 - Preserved separate frozen/dry jobs, unserved reasons and PHT/CBM/KG/PHP columns. See [CSV formats and filtering](csv-and-network-filter.md).
 - All 103 tests and TypeScript/Vite build pass; existing MapLibre chunk warning remains. Browser download/click and hosted verification pending.
+
+## 24 October 2026: Render verification, submission PDF and fleet crew experiments
+
+- After the user-triggered deploy, observed HTTP 200 and the 62e4468 app asset with CSV/filter/current status features at domtransport.onrender.com. Later fleet changes require their own deploy verification.
+- Added allocated/crew-ready/active/idle/blocked breakdown and opt-in temporary crew cover. Fresh Bulacan 2 A + 10 B with saved crews still staffs 2 A + 6 B; enabling cover explicitly adds four drivers/helpers and can create more routes.
+- Generated and visually checked the nine-page approach PDF, refreshed its Markdown and deterministic evidence, and prepared an email draft with both links. No email sent.
+- 106 tests and production build pass; browser interaction/WebGL remains unverified. See deployment-verification.md and verification.md.

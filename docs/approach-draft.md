@@ -1,193 +1,322 @@
-# DomTransport: fleet allocation and daily dispatch
+# DomTransport: approach and working prototype
 
-**Review draft · updated 24 October 2026 · synthetic data only**
+**Submission edition | 24 October 2026 | synthetic data only**
 
-Related: [road routing and extended costs](road-routing-and-costs.md), [core changes and reasoning](core-changes.md), [module calculations and rehearsal notes](prototype-review-notes.md).
+## The fleet decision
 
-## 1. Leadership recommendation
+DOMTRANSPORT | APPROACH AND WORKING PROTOTYPE
 
-Separate a recurring fleet decision from daily dispatch. Forecast each distributor's cold and dry workload, establish a normal baseline, reserve incremental capacity for peak demand, then test the allocation against actual delivery windows, payloads and travel conditions. Revisit allocations when demand or service indicators drift.
+Prepared 24 October 2026. Synthetic data only. This document explains the implemented prototype, the mathematical approach, evidence and the next steps needed for operational use.
 
-The prototype now demonstrates this loop for all six distributors, with an overall network summary and independent local master data. It does not infer actual fleet requirements from the problem statement alone: five years of historical orders, capacities and retailer mapping were described but not supplied. Every numerical input below is an illustrative assumption.
+### The problem we address
 
-## 2. Assumptions and synthetic data
+A regional FMCG manager must allocate refrigerated Type A vans and larger dry Type B trucks to Quezon City, Manila City, Makati, Pasig, Bulacan and Cavite. Together these distributors cover about 50,000 mapped retailers. Each retailer belongs to one distributor; 50,000 retailers does not mean 50,000 orders every day.
 
-| Input | Assumption |
-|---|---|
-| Mapped retailer population | 50,000 across all six distributors |
-| Distributor shares | QC 11,000; Manila 10,000; Makati 9,000; Pasig 5,000; Bulacan 8,000; Cavite 7,000 |
-| Demo activity | 100 synthetic retailer profiles per distributor initially (600 total); saved Pasig sample preserved. Sample orders are not extrapolated to 50,000 daily orders |
-| Pasig location model | Five synthetic clusters near Kapitolyo, Ortigas, Rosario, Santolan and Pinagbuhatan, not actual retailer addresses |
-| SKU unit | A synthetic case; sizes and weights are assumed, not commercial specifications |
-| Cold demand | Approximately 28% chance of ice cream per basket; mixed baskets become separate frozen and dry deliveries |
-| Normal basket | Each dry SKU 0–3 cases; ice cream 1–3 when present; empty basket repaired to one toothpaste case |
-| Peak scenario | Order count x1.5 and each nonzero SKU quantity x1.6, rounded up; repeated transactions retain assigned retailer windows. Peak shift allowance +2 hours; proposed resources versus current resources are separate views |
-| Windows | 08:00, 09:00, 10:00 or 11:00 opens, four-hour windows, full handling must finish before close |
-| Shift | 06:00-18:00 normal, up to 20:00 peak by default; 25 minutes fixed depot preparation; one trip per vehicle |
-| Type A | Refrigerated; 5 CBM, 900 KG; PHP 1,700 per used vehicle/day plus PHP 24/km |
-| Type B | Dry; 11 CBM, 2,500 KG; PHP 1,400 per used vehicle/day plus PHP 16/km |
-| Base travel | 22 km/h; haversine distance × 1.35 detour; time × 1.35 network traffic factor × destination zone factor |
-| Zone traffic factors | Kapitolyo 1.20, Ortigas 1.65, Rosario 1.40, Santolan 1.30, Pinagbuhatan 1.25 |
-| Fleet reserve | 15% workload buffer before rounding vehicle counts |
-| Restriction | Illustrative Type B no-movement interval 07:00–09:00; origin waiting if a modeled leg would overlap; applies to all modeled travel, including depot return |
-| Local masters | Six separate depot locations, five traffic zones each, seeds, retailer receiving schedules and operating assumptions. All synthetic and uncalibrated |
-| Receiving hours | Editable same-day opening/closing and closed-day flag for each distributor master; full handling must fit |
-| Load segregation | User-selected policy: ice cream only on Type A, dry products only on Type B. The challenge does not explicitly authorise mixed frozen/dry loads |
+The five SKUs are toothpaste, ice cream, soap, water purifier and tea. Ice cream requires refrigerated delivery. We must recommend normal-day and September-December peak capacity, and explain when to revisit that allocation.
 
-| SKU | CBM/box | KG/box | Load min/box | Unload min/box | Compatibility |
-|---|---:|---:|---:|---:|---|
-| Toothpaste | 0.035 | 12 | 0.2 | 1 | B only |
-| Ice cream | 0.09 | 18 | 0.5 | 2 | A only |
-| Soap | 0.05 | 16 | 0.2 | 1 | B only |
-| Water purifier | 0.22 | 25 | 1 | 5 | B only |
-| Tea | 0.04 | 8 | 0.2 | 1 | B only |
+### Our recommendation
 
-Handling time at each delivery stop is five minutes fixed plus sum of its case quantities × (loading + unloading minutes). Both case handling components are conservatively charged at each stop, including in the receiving window. A mixed parent order needs two deliveries and incurs the fixed stop handling twice. This is a time-budget proxy; it does not simulate warehouse loading operations. Fixed depot preparation is separate.
+- Size frozen and dry fleets separately using the greatest requirement for CBM, KG and available working hours, then add an explicit reserve.
 
-Retailer management is scoped to the selected distributor. Add/edit synthetic identities, local coordinates and schedules; archive/restore, import/export JSON, then apply. Closed retailers stay in demand as exceptions and are excluded from serviceable allocation workload. Each stress example closes the first five active local retailers and shortens the next ten windows. No weekly calendar, dock contention or actual delivery confirmations are modeled. Distributor ownership is fixed within each editor to prevent accidental cross-master reassignment.
+- Test the fleet in daily dispatch against store receiving hours, payloads, available drivers/helpers, assumed traffic, illustrative restrictions and return-to-depot time.
 
-A separate source-linked public Metro Manila address catalog remains reference-only. It is excluded from all dispatch masters and asserts no verified receiving hours or coordinates. Active profiles in each master determine that distributor sample demand. The initial Pasig master preserves the original baseline. See network-masters.md for scoped settings and migration.
+- Compare saved current resources with a proposed peak truck-and-crew package. Inspect service gaps and cost together before changing permanent capacity.
 
-The interface edits depot/zone coordinates, traffic, receiving windows, box CBM/KG, handling, capacities, costs and PHT operating times independently for each distributor. The mapped-retailer split is an illustrative source constant. Settings export version 2 contains all six masters; legacy version 1 migrates existing Pasig edits.
+> The brief describes five years of orders and retailer mapping, but those files were not supplied. No historical data or trained AI forecast is fabricated. All operational examples are seeded synthetic scenarios and editable assumptions.
 
-## 3. Forecasting approach for supplied historical data
+### One order can require two deliveries
 
-Aggregate five years of retailer orders by distributor, SKU and date; validate case units, cancellations, duplicates, stockouts, addresses and mapping changes. Forecast case demand and active delivery stops separately. Cold delivery workload depends on cold baskets, not only on ice cream volume.
+Our selected operating policy uses Type A for ice cream only and Type B for all dry products. A mixed retailer basket therefore becomes two delivery portions, potentially on different vehicles. This segregation policy is an additional assumption, not an explicit requirement to prohibit dry goods in Type A in the original brief.
 
-Compare seasonal-naive, moving weekday averages and a seasonal regression or gradient-boosted model with holidays, September–December seasonality and promotions. Use rolling-origin backtesting with no future leakage. Track WAPE or MAE at distributor/SKU level, forecast bias and empirical quantile coverage; do not rely only on percentage errors for intermittent SKUs. Choose an uncertainty quantile with leadership based on cost and service requirements. The 15% prototype reserve is an assumption, not a calibrated quantile.
+| Example from the screen | Count |
+| --- | --- |
+| Retailer orders | 200 |
+| Mixed orders needing a second temperature delivery | 54 |
+| Required delivery portions: 200 + 54 | 254 |
+| Planned portions / unserved portions | 224 / 30 |
 
-The browser prototype generates seeded demand; it does not train or run a forecasting model. Production should test peak order-count growth as well as larger baskets; the implemented peak scenario tests basket growth only.
+224/254 does not mean 224 retailers served. A parent order is fully covered only when every required portion is planned. Some of the 30 missing portions may belong to partial orders. The screenshot does not establish the full-order coverage by itself.
 
-## 4. Implemented allocation model
+## Assumptions and master data
 
-For distributor d and vehicle class t, split each basket into a frozen job for Type A and a dry job for Type B, omitting empty portions. Preserve original order IDs for completion accounting. Let:
+PART 1 | INPUTS AND PHILIPPINE OPERATING TERMS
 
-- V_dt and W_dt be total serviceable delivery-job volume and weight before routing;
-- Qv_t and Qw_t be vehicle volume and weight limits;
-- Hshift = (shift end − shift start − depot preparation) / 60 hours;
-- H_dt be estimated handling hours plus nominal travel hours;
-- r be the reserve fraction.
+Every distributor has its own depot, five local traffic zones, synthetic retailer master, demand settings, fleet and attendance. Pasig is the main demo example; it is not a central warehouse serving all six distributors. No stock transfer or cross-depot vehicle pooling is modeled.
 
-The implemented nominal workload adds **2.4 km per stop**, multiplied by the detour and traffic factors and divided by speed. This is a planning proxy, not a route-length calculation. It does not directly model ban waiting or window clustering.
+| Input | Illustrative default |
+| --- | --- |
+| Demo scale | 100 profiles/orders per distributor; 600 normal orders |
+| Type A: refrigerated van | 5 CBM; 900 KG; PHP 1,700/day used + PHP 24/KM |
+| Type B: dry box truck | 11 CBM; 2,500 KG; PHP 1,400/day used + PHP 16/KM |
+| Normal working hours | 6 AM-6 PM PHT; 25 min preparation; one tour/truck |
+| Peak demand / shift | 1.5x orders; 1.6x cases rounded up; +2 vehicle hours |
+| Travel proxy | 22 KM/h; 1.35 distance detour; 1.35 area delay factor |
+| Fleet reserve | 15% before integer rounding |
+| Illustrative Type B restriction | 7-9 AM PHT; waits before overlapping driving legs |
 
-**N_dt = ceil[(1 + r) × max(V_dt / Qv_t, W_dt / Qw_t, H_dt / Hshift)].**
+### Product packaging and handling
 
-For an empty demand class N = 0. Evaluate normal and peak synthetic orders independently. The integer ceiling and reserve avoid fractional vehicles; they do not guarantee route feasibility. Vehicles are homogeneous within each type. There is no fleet procurement optimiser or endogenous Type A/B cost tradeoff in this sizing formula.
+| SKU | CBM/case | KG/case | Load min | Unload min |
+| --- | --- | --- | --- | --- |
+| Toothpaste | .035 | 12 | .2 | 1 |
+| Ice cream | .090 | 18 | .5 | 2 |
+| Soap | .050 | 16 | .2 | 1 |
+| Water purifier | .220 | 25 | 1 | 5 |
+| Tea | .040 | 8 | .2 | 1 |
 
-In a real rollout, evaluate candidate fleets over historical and forecast demand scenarios, route each candidate, and compare permanent fleet cost, seasonal rental, service performance and reserve utilization. Start with the heuristic counts, add capacity when misses persist, and trial reductions when capacity is consistently idle. Do not conclude that every miss requires another vehicle: route quality, time windows and restrictions can bind.
+One case represents one box. Full handling = loading allowance + unloading + 5 minutes fixed tasks per stop. Warehouse loading queues are not separately simulated. Driving, store waiting and ban waiting are separate.
 
-## 5. Target mathematical models
+### Receiving windows, staff and provenance
 
-### Fleet investment / seasonal capacity
+Receiving windows and closed-day flags are editable. Default windows open at 8, 9, 10 or 11 AM for four hours. Closed stores remain demand exceptions; archived stores leave demand. One present driver and one helper per truck are initially assumed; helper requirements are editable.
 
-Let n_dt be integer permanent vehicles and h_dts be seasonal rental vehicles in scenario s. Minimize permanent fleet cost + expected seasonal rental/operating cost + an explicitly priced service shortfall, subject to scenario routing feasibility and an agreed service-level policy. Budget, fleet availability and cold-chain requirements add constraints. A robust or stochastic formulation can protect against demand uncertainty. This is the proposed production model, not an implemented solver.
+Pasig delay factors: Kapitolyo 1.20, Ortigas 1.65, Rosario 1.40, Santolan 1.30, Pinagbuhatan 1.25. A 1.20 factor means 20% extra time, not live congestion.
 
-### Heterogeneous fleet vehicle routing with time windows
+> The public Metro Manila address reference catalog is kept separate from dispatch. Its source does not establish supplier receiving windows, verified coordinates or retailer-to-distributor relationships. All delivery master records used in this submission are synthetic.
 
-Here node i represents a frozen or dry delivery job. A mixed retailer order contributes two jobs at the same location, with the same receiving window. A parent order counts as fully covered only when all its jobs are assigned. A job cannot be split across vehicles; its parent order can be split by temperature class.
+## Forecast demand and size the fleet
 
-For retailer nodes i, vehicles k and arcs (i,j), define:
+PART 1 | IMPLEMENTED HEURISTIC AND PROPOSED FORECASTING
 
-- z_k ∈ {0,1}: used vehicle;
-- x_ijk ∈ {0,1}: vehicle k traverses i → j;
-- y_ik ∈ {0,1}: order i assigned to k;
-- u_i ∈ {0,1}: unserved order;
-- T_ik: service start; s_i: full handling duration;
-- v_i and w_i: payload; a_i and b_i: delivery window;
-- τ_ijk: estimated travel time, including restriction waiting where applicable.
+### Production forecasting: proposed, not trained in the app
 
-Objective: **min Σ_k F_k z_k + Σ_ijk c_k distance_ij x_ijk + Σ_i P_i u_i**.
+With the five-year dataset, validate quantities, duplicates, cancellations, stockouts, changing addresses and distributor mappings. Aggregate by distributor, SKU and date. Forecast order frequency, case quantities and cold/dry mix separately, including weekday, promotion, holiday and September-December effects.
 
-Core constraints:
+Compare seasonal-naive and moving-weekday baselines with seasonal regression or gradient boosting. Use rolling-origin backtests, WAPE/MAE, forecast bias and uncertainty coverage. Choose a service quantile with leadership. The prototype instead uses a fixed seed and declared peak multipliers; its 15% reserve is not a calibrated forecast quantile.
 
-1. Σ_k y_ik + u_i = 1 for each order (explicit shortfall).
-2. Per-vehicle arrival/departure flow at assigned nodes equals y_ik; one depot departure and return for each used vehicle.
-3. Σ_i v_i y_ik ≤ Qv_k z_k and Σ_i w_i y_ik ≤ Qw_k z_k for a one-trip depot tour.
-4. Frozen job assignments y_ik = 0 for Type B vehicles, and dry job assignments y_ik = 0 for Type A, under the selected segregation policy.
-5. Service start T_ik ≥ a_i and T_ik + s_i ≤ b_i when assigned.
-6. Time propagation T_jk ≥ T_ik + s_i + τ_ijk − M(1 − x_ijk), with a justified tight M or indicator constraints.
-7. Dispatch after loading; return to depot by shift end; no movement during the modeled prohibited interval.
-8. Flow/subtour constraints or monotonic positive-time propagation eliminate disconnected cycles.
+### The implemented binding-resource calculation
 
-Real time-dependent travel and road restrictions need a road graph and departure-dependent travel functions. The simplified restriction in this prototype is a blanket interval, not a representation of a legal truck-ban network. A production solver must model driver breaks and cold-chain conditions too.
+> Vehicles of each type = ceil[(1 + reserve) x max(total CBM / truck CBM, total KG / truck KG, workload hours / available hours)].
 
-## 6. Implemented daily heuristic
+Workload includes delivery handling plus a nominal 2.4 KM per stop, adjusted for detour, speed and traffic factors. Available hours = (shift end - shift start - preparation) / 60. Only serviceable, non-closed jobs enter sizing. Empty demand requires zero trucks. This formula estimates a starting fleet; it cannot guarantee receiving-window feasibility.
 
-First split retailer orders into frozen and dry delivery jobs. Process Type A then Type B vehicles. Consider only jobs of the vehicle's temperature class with remaining volume/weight capacity. Skip closed retailers. For every candidate, estimate travel, origin restriction wait, window wait and service finish. Reject a candidate if full service misses its receiving close or its direct modeled return would exceed shift end.
-
-Choose the feasible candidate with the lowest score:
-
-**3 × leg km + 0.12 × window-wait minutes + 0.012 × (window close − shift start).**
-
-The coefficients are illustrative ranking weights, not money or learned values. Append it to the route, update payload and time, and repeat. Return to the depot. Unassigned orders remain in an exception table with a capacity or combined fleet/time review reason. Those reasons are diagnostic categories, not exact proofs of the binding constraint.
-
-The heuristic is deterministic for a fixed seed/configuration, indivisible frozen/dry jobs and one trip per vehicle. There is no mid-route replenishment or driver-break model. It may miss feasible plans. The system never relaxes constraints silently to improve coverage. Incomplete parent orders remain visible; an order with only one of its two jobs assigned is labeled partially planned.
-
-## 7. Metrics and baseline evidence
-
-- Planned order coverage = fully assigned parent retailer orders / all parent retailer orders. Both jobs of a mixed order must be assigned. Partially planned orders count as incomplete and are also counted separately.
-- Planned window compliance = assigned delivery jobs whose full handling fits their window / assigned jobs. Because feasibility is enforced, this usually equals 100%; it must be paired with order coverage. This is the interface's on-time planning measure, not actual delivery performance. Actual on-time rate cannot be measured without delivery confirmations.
-- Volume utilization = mean(route volume / vehicle volume limit) across **used** vehicles. The manifest also shows weight payload and capacity; volume utilization alone can understate weight or time pressure.
-- Average drops per truck = assigned delivery stops / used vehicles, displayed to one decimal place. Frozen and dry portions delivered separately to the same retailer count as two drops. Depot departure/return, unassigned jobs and idle vehicles are excluded. Zero used vehicles produces zero. This is planned stop productivity, not proof of actual deliveries or distinct retailers reached. The normal default is 118 / 8 = 14.75, displayed as 14.8.
-- Distance includes depot returns. Approximate mode uses detoured haversine distance; optional road validation uses OSRM road-leg distance and rechecks schedules. Road validation trims an existing sequence and does not optimize it.
-- Base transport cost = used-vehicle daily charge + route KM times base running rate. The operating KPI now also includes editable idle ownership, maintenance, toll allowance and overtime. Expected spoilage and unassigned contribution margin are separate risk/opportunity exposure. See road-routing-and-costs.md for exact formulas and assumed rates.
-- GPS is simulated along road geometry in road mode and straight connections in approximate mode. It respects modeled waits and returns; it is not a telemetry feed.
-
-For the Pasig distributor at seed 42 in approximate mode, observed baseline results below show base transport only; the current operating KPI adds allowances:
-
-| Scenario | Allocated A/B | Used | Served | Mean volume utilization | Estimated km | Modeled cost |
-|---|---|---:|---:|---:|---:|---:|
-| Normal | 2 / 6 | 8 | 93 / 100 | 65.6% | 164.9 | PHP 14,893 |
-| Peak | 3 / 10 | 12 | 100 / 100 | 84.4% | 185.0 | PHP 20,736 |
-
-The 100 original retailer orders produce 125 frozen/dry jobs. Normal assigns 118 jobs, leaving seven original orders incomplete, including one partially planned order. Peak assigns all 125 jobs with a larger allocation. Increasing demand together with fleet capacity can improve coverage; this is not a prediction that peak operations are easier. At default settings the receiving-hours stress example produces 84 fully planned orders, 16 incomplete including two partial, and five closed retailers. Missing assignments arise from modeled constraints and heuristic results; no arbitrary failure percentage was injected.
+Business example: if space needs 4 trucks, weight needs 3 and time needs 6, time sets the requirement. With a 15% reserve, ceil(6 x 1.15) = 7. Compute this separately for frozen and dry work.
 
 | Distributor | Normal A | Normal B | Peak A | Peak B |
-|---|---:|---:|---:|---:|
-| Quezon City | 2 | 7 | 3 | 10 |
-| Manila City | 2 | 8 | 3 | 11 |
-| Makati | 3 | 8 | 4 | 11 |
-| Pasig | 2 | 6 | 3 | 10 |
-| Bulacan | 2 | 6 | 3 | 11 |
-| Cavite | 2 | 6 | 3 | 10 |
+| --- | --- | --- | --- | --- |
+| Quezon City | 2 | 7 | 4 | 15 |
+| Manila City | 2 | 8 | 3 | 16 |
+| Makati | 3 | 8 | 5 | 16 |
+| Pasig | 2 | 6 | 3 | 15 |
+| Bulacan | 2 | 6 | 5 | 16 |
+| Cavite | 2 | 6 | 5 | 15 |
 
-These counts size the independently generated 100-order sample days, not the full 50,000-retailer footprint. Normal network results: 545/600 complete orders, 53/54 used/allocated vehicles, 1,319.9 KM and PHP 102,581. Peak: 578/600 complete, 80/82 used/allocated, 1,756.2 KM and PHP 149,296. These are synthetic demonstrations, not a general sizing recommendation. Exact figures change with settings. Spare allocated vehicles can coexist with missed orders when time windows, geography or the heuristic prevent service.
+These are fresh-default sample recommendations for 100 normal and 150 peak orders per distributor, not a fleet acquisition answer for all 50,000 retailers. Peak includes larger baskets and a later shift. Saved edits and road validation change outcomes.
 
-## 8. Reallocation policy
+### Separate the requirement from what can run today
 
-Daily: replan using available fleet and new orders, inspect exceptions and dispatch only reviewed routes. Weekly: monitor forecast bias, demand mix, cold share, coverage and route hours. Monthly: revisit baseline allocation, including local capacity sharing. Before September: stress-test Christmas scenarios and reserve seasonal rentals.
+Recommended fleet is the demand-based target. Current fleet is the saved physical inventory. Crew-ready trucks = min(physical trucks, present drivers, floor(present helpers / helpers per truck)); zero required helpers removes the helper limit. No staff or vehicles are silently borrowed across depots.
 
-Illustrative investigation triggers: more than 10% demand drift for two consecutive weeks; coverage below 98%; utilization above 90% or below 55% for ten operating days. Tune these with leadership and local service objectives. Do not shift vehicles between distributors without considering repositioning cost and depot capability, which are absent from this prototype.
+The fleet experiment also offers explicit temporary crew cover without changing saved attendance. Proposed peak uses max(saved trucks, recommended peak trucks), capped at 500/type, and declares temporary crew cover separately. It does not edit saved inventory or actual attendance. Current-resources peak shows the same demand against the saved fleet and crew.
 
-## 9. Validation and next steps
+## Mathematical models and constraints
 
-The automated suite checks repeatability, peak payload accounting, cold compatibility, capacity, full windows, return time, order conservation, visible infeasibility, ban waiting, regional consistency, GPS endpoints and invalid settings. Build/type checking validates integration. Browser journeys remain a separate verification gate; see the verification record for actual status.
+PART 1 | TARGET OPTIMIZATION VERSUS CURRENT IMPLEMENTATION
 
-Production next steps: obtain real data under proper access controls, geocode/validate mapping, calibrate travel and stop distributions, verify current restrictions, benchmark a solver against dispatcher plans, and conduct a limited field pilot with temperature monitoring. Quantify service/cost improvement against an agreed baseline before claiming savings.
+The workload formula and greedy sequencing are implemented. The optimization models below describe the proposed production upgrade; the prototype does not run a mathematical optimizer or prove a globally lowest-cost solution.
 
-## 10. Submission and review
+### Fleet investment and seasonal capacity
 
-Review the assumptions, narrative and results before creating the final PDF. The user has explicitly authorized source publication, and the code is now at [domzxc/locusprototype](https://github.com/domzxc/locusprototype). Render account connection and hosted smoke testing remain pending. After deployment, include the finalized approach PDF, GitHub link and verified live app link in the submission. No email has been sent and no hosted service has been deployed from this session; see the release log for publication evidence.
+For depot d, vehicle type t and demand scenario s, let n[d,t] be permanent vehicles and h[d,t,s] seasonal rentals. Minimize permanent ownership cost + expected seasonal rental and operating cost + explicitly priced service shortfalls, subject to budget, compatible routing and an agreed service-level target. Compare candidates over historical and forecast scenarios before buying permanent capacity.
 
+### Heterogeneous-fleet routing with time windows
 
-## Philippine logistics units and schedules
+Each node i is a frozen or dry delivery portion. Define y[i,k] = 1 when vehicle k serves it, u[i] = 1 when it is unserved, x[i,j,k] = 1 for a traveled arc, z[k] = 1 for a used vehicle, and T[i,k] as service start. A mixed parent contributes two nodes; its completion requires both assigned.
 
-The app uses CBM (cubic metres) and KG for vehicle capacities, order loads and manifests; quantity remains boxes. One synthetic case represents one box. Each SKU has editable CBM/box and KG/box in Data studio. Total load is the sum of box quantity multiplied by its per-box CBM or KG; both capacity constraints must hold. These packaging measurements are assumptions, not measured supplier specifications. Existing settings without packaging arrays receive the previous defaults.
+> Target objective: minimize sum(fixed vehicle cost x z) + sum(cost per KM x distance x x) + sum(service penalty x u).
 
-All clock fields and schedule displays use Philippine wall-clock time, PHT (UTC+8, Asia/Manila), independently of the browser timezone. Shift and illustrative truck-ban settings use clock inputs rather than raw minutes. Defaults are 6:00 AM-6:00 PM for the shift and 7:00 AM-9:00 AM for the illustrative ban. The ban is a synthetic, editable no-movement assumption, not a statement of current MMDA/LGU rules. Only same-day intervals are modeled; midnight in shift/ban end fields means the end of that day. Retailer receiving intervals remain within the same day.
+| Constraint | Business interpretation |
+| --- | --- |
+| sum_k y[i,k] + u[i] = 1 | Every portion is assigned once or explicitly unserved |
+| sum_i volume[i] y[i,k] <= capacity[k] z[k] | One loaded tour fits CBM |
+| sum_i weight[i] y[i,k] <= payload[k] z[k] | The same tour also fits KG |
+| Cold/dry compatibility restrictions | Frozen only on A; dry only on B under our policy |
+| open[i] <= T[i,k]; T[i,k] + service[i] <= close[i] | Full handling, not only arrival, fits receiving hours |
+| Time propagation along selected arcs | Travel, handling and waits determine the next stop |
+| Departure/return flow and subtour elimination | One connected depot tour per used truck |
+| Crew-ready and shift/restriction constraints | Available staff; return by end; wait for modeled ban |
 
-Internal JSON schedule values remain minutes after midnight to preserve compatibility. Exports include unit/time-basis metadata; the numeric fields are not UTC timestamps. Fleet reserve is entered as a percentage (15 means 15%) and stored as a fraction (0.15). Costs use PHP and distance uses KM. CBM is the same volume unit previously labeled cubic metres, so renaming alone changes no allocation.
+Time propagation uses a justified tight big-M or indicator constraint for unselected arcs. Production needs departure-dependent travel functions and verified truck access, not just a driving-profile route. Link parent-order completion variables to all its portion assignments when pricing service outcomes.
 
+### Variables considered
 
-Current inventory extension: [Depot planning](depot-planning.md) saves the day demand and current A/B counts. Recommendation tables remain fleet-sizing outputs. Earlier peak performance rows use recommended peak fleets; saved current inventory no longer expands automatically on peak selection. Dispatch and Network overview test saved availability, with temporary Try recommended fleet experiments available locally.
+Order counts, SKU cases, CBM/KG per case, temperature class, store/depot coordinates, receiving windows, handling and preparation, base and road travel, assumed area delays, illustrative ban intervals, shift hours, reserve, fleet availability, staff attendance and operating/risk cost inputs. Production additionally needs actual road restrictions, breaks, reloads, rental terms, temperature and execution observations.
 
+## How daily dispatch is built
 
-## Daily crew availability extension
+PART 2 | SEQUENCE, ROADS AND VISIBLE EXCEPTIONS
 
-The demand-based normal/peak fleet remains the capacity target. Daily dispatch additionally restricts each depot/type to `min(physical trucks, present drivers, floor(present helpers / helpers required per truck))`; zero required helpers removes the helper limit. One driver per truck and one helper per truck initially are declared assumptions; helper requirement is editable. Scheduled and present headcounts are saved per type/depot, with no pooling or employee-level scheduling. Both approximate and road validation enforce the limit. Unassigned demand and idle physical truck costs remain visible. More vehicles alone cannot solve a staff shortage. Attendance history, leave forecasting and headcount-dependent payroll are not implemented.
+### 1. Generate and split demand
 
-Preparation readiness is distinct from departure. The configured no-movement interval applies only to its selected vehicle type; pre-ban legs may run if they finish by the start, while overlapping legs wait before travel. The manifest adds first-leg ban wait to readiness to show modeled departure. The default 7-9 AM Type B setting remains illustrative, editable and unverified against local regulations.
+Create seeded synthetic parent orders tied to local retailer profiles. Split mixed baskets into separate frozen/dry portions, conserving quantities, CBM and KG. Peak may repeat transactions at the same assigned store with unique order IDs; repeat jobs are not automatically consolidated.
 
-## Updated peak scenario: order frequency, working hours and proposed capacity
+### 2. Build compatible tours
 
-[Peak planning](peak-planning.md) supersedes earlier boxes-only peak results. Orders increase by an editable 1.5x default, boxes per order by 1.6x, and the vehicle shift limit by two hours (capped at midnight). Receiving windows do not extend. Repeat transactions retain their assigned retailer master, have unique order IDs and are not silently consolidated. Demand recommendations use the longer peak shift. The default Peak UI models max(saved trucks, recommended peak trucks) plus declared temporary driver/helper cover as a hypothetical package, with Current resources only as the constrained comparator. Inventory/attendance saved in masters stay unchanged. Costs use the same route/resource arithmetic; no normal-cost floor or artificial peak charge is applied. Normal/peak results are synthetic assumptions pending historical calibration.
+Process staffed A then B trucks. Among pending compatible jobs that fit residual tour capacity, calculate travel, ban wait, store wait, handling finish and return. Reject an append if full service misses closing or depot return exceeds shift end.
+
+### 3. Choose the next feasible stop
+
+The greedy score is 3 x leg KM + 0.12 x store-wait minutes + 0.012 x (receiving close - shift start). The lowest score is appended. These are declared ranking weights, not trained AI weights or a monetary objective.
+
+### 4. Validate the existing sequence against roads
+
+OSRM supplies ordered driving legs, distances, durations and geometry. Assumed area/zone delays adjust travel. Road validation removes failing stops and reroutes the remaining sequence, up to five passes per vehicle. Updates publish atomically; errors retain the labeled previous travel basis.
+
+### 5. Review before dispatch
+
+Inspect every portion, its vehicle sequence, PHT arrival/start/finish, load, costs and exception reason. Scheduled, in-progress and served map states are simulated from the clock. Unserved and partial orders stay visible.
+
+> No depot reload, second tour, job exchange or reinsertion of removed road stops is implemented. A 3 PM return can be a short validated tour or search limitation; it is not proof every store was served, or proof more trucks are needed.
+
+### Precise reasons rather than one combined failure
+
+Reasons distinguish closed receiving, handling longer than a window, oversized CBM/KG, no compatible truck, no crew, late full service, late depot return, or unresolved validation/search limits. Road failures report the attempted PHT timing and incoming drive/store/ban waits. Approximate final-tour checks disclose potential appends that were not retried. A failed sequence is not proof every possible sequence fails.
+
+A restriction applies only to its configured type. A leg finishing before 7 AM may run under the default Type B example; a leg overlapping 7-9 AM waits at its origin. Store waiting and handling can continue during the interval. This is an illustrative rule, not verified Philippine regulation.
+
+## Evidence from the working prototype
+
+PART 2 | FRESH DEFAULTS, APPROXIMATE TRAVEL, 24 OCTOBER 2026
+
+The tables below are regenerated from the checked-in engine with fresh settings, not from the user's saved 200-order Pasig browser sample. Road validation can produce different distances and lower coverage. All numbers are modeled outcomes, not observed deliveries or market quotes.
+
+| Network view | Orders | Complete | Used / fleet | Operating PHP |
+| --- | --- | --- | --- | --- |
+| Normal / current | 600 | 545 | 53 / 54 | 117,464 |
+| Peak / current | 900 | 405 | 54 / 54 | 107,617 |
+| Peak / proposed | 900 | 877 | 116 / 118 | 240,012 |
+
+The proposed peak package adds 64 trucks, 64 temporary drivers and 64 helpers across the sample network. It increases complete orders from 405 to 877 out of 900 versus current-resource peak. These are hypothetical additions using standard configured rates, not a procurement commitment.
+
+| Pasig view | A / B | Full orders | Planned portions | Operating PHP |
+| --- | --- | --- | --- | --- |
+| Normal / current | 2 / 6 | 93 / 100 | 118 / 125 | 16,831 |
+| Peak / current | 2 / 6 | 68 / 150 | 96 / 184 | 15,583 |
+| Peak / proposed | 3 / 15 | 150 / 150 | 184 / 184 | 33,663 |
+
+| Pasig view | Used | CBM use | KM | Drops/truck |
+| --- | --- | --- | --- | --- |
+| Normal / current | 8 | 65.6% | 164.9 | 14.8 |
+| Peak / current | 8 | 95.1% | 107.8 | 12.0 |
+| Peak / proposed | 17 | 86.6% | 247.1 | 10.8 |
+
+### Read the measures together
+
+- Order coverage = fully planned parent orders / all parent orders. Partial orders are incomplete, even if one temperature portion is scheduled.
+
+- Window compliance = assigned portions finishing by receiving close / assigned portions. The app shows planned/required counts and excluded unserved portions. A 100% check can coexist with lower coverage.
+
+- Utilization = average used-truck CBM load / capacity; examine KG, route hours and staff too. It is not the share of all physical fleet capacity.
+
+- Average drops = assigned frozen/dry jobs / used trucks. Two temperature portions or repeat transactions at one store can count separately; it is not distinct retailers reached.
+
+- Distance includes depot returns. Operating cost reflects resources actually used plus stated idle/add-on allowances. Lower constrained spend with missed service is not a saving.
+
+> Illustrative normal Pasig: 100 orders become 125 portions; 118 are planned, 93 parent orders are fully covered and one is partial. Base transport is PHP 14,893; the fuller operating estimate is PHP 16,831. Do not mix the two cost definitions.
+
+## Cost and business exposure
+
+PART 1 AND 2 | TRANSPARENT PHP ASSUMPTIONS
+
+The planner evaluates cost after routing. It does not optimize the complete cost model. Every rate below is an editable scenario input, not a supplier quote, statutory payroll calculation or verified toll tariff. Set add-ons to zero if they are already included in base charges.
+
+| Cost input | Type A | Type B |
+| --- | --- | --- |
+| Fixed / used vehicle-day | PHP 1,700 | PHP 1,400 |
+| Base running / KM | PHP 24 | PHP 16 |
+| Idle ownership / unused day | PHP 1,000 | PHP 800 |
+| Additional maintenance / KM | PHP 3 | PHP 2 |
+| Toll allowance / used tour | PHP 80 | PHP 120 |
+| Crew overtime / hour | PHP 120 | PHP 100 |
+
+### Operating estimate
+
+- Base transport = sum(used fixed charge + tour KM x running rate).
+
+- Idle = sum(unused allocated trucks x idle daily rate). A vehicle receives used or idle charges, never both.
+
+- Maintenance = sum(tour KM x additional maintenance rate). Tolls = flat allowance per used tour.
+
+- Overtime = sum(max(0, route duty hours - paid hours) x crew hourly rate). Duty starts at shift start and ends on depot return; paid hours default to eight.
+
+- Operating estimate = transport + idle + maintenance + tolls + overtime. A longer allowed shift does not automatically bill the whole extension.
+
+### Separate risk from actual operating expense
+
+Expected frozen damage = assigned frozen cases x assumed book value x expected damage fraction. Defaults are PHP 1,200/case and 1%. This is an exposure proxy, not temperature-derived spoiled stock.
+
+Unserved contribution profit exposure = missing cases by SKU x assumed contribution margin. Default margins per case: toothpaste PHP 80, ice cream 150, soap 70, water purifier 400 and tea 60. A partial order contributes only its missing portion. A delayed order is not automatically a confirmed lost sale.
+
+> Combined scenario estimate = operating + expected spoilage + unserved contribution margin. Keep this separate from operational expenditure; do not describe opportunity exposure as an invoiced or confirmed loss.
+
+### What still needs a production budget
+
+Seasonal rental premiums, recruitment, regular temporary staff wages, absence payroll, detailed financing/insurance/tax and calibrated breakdown or spoilage models are not separately priced. The used-truck base charge assumes crew provision. The proposed seasonal package uses configured normal rates, so it is a resource scenario rather than a complete rental or staffing budget.
+
+## Management controls and review policy
+
+PART 1 | KEEP THE ALLOCATION RESPONSIVE
+
+| Module | What leadership can review |
+| --- | --- |
+| Network overview | All or one depot; normal/peak service, fleet, attendance and cost |
+| Depot planning | Independent order count, physical A/B trucks and crew attendance |
+| Dispatch planner | Road/approximate plan, GPS simulation, manifests and unserved review |
+| Fleet allocation | Six-depot normal/peak demand-based recommendations |
+| Retailer management | Synthetic profiles, receiving windows, closed/archived stores |
+| Data studio | Traffic, packaging CBM/KG, handling, costs, shifts and restrictions |
+| CSV portability | Network/dispatch/allocation reports and validated settings/master backups |
+
+### When to revisit the fleet
+
+- Daily: update demand, actual truck availability and present crew; review all unserved/partial portions and dispatch only reviewed plans.
+
+- Weekly: check bias, order frequency, cold share, workload and service; investigate more than 10% demand drift for two weeks.
+
+- Monthly: revisit baseline allocation when coverage is below an illustrative 98% target, or CBM utilization stays above 90% or below 55% for ten operating days.
+
+- Before September: test order growth, larger baskets, traffic, receiving restrictions and attendance scenarios; reserve seasonal capacity before deciding permanent additions.
+
+Thresholds are investigation triggers, not calibrated contractual service levels. Consider geography, receiving hours, crew and routing quality before treating every miss as a truck shortage. Cross-depot reallocation would require positioning cost, capability and mapping checks not present in this demo.
+
+### Limits to state openly
+
+No supplied five-year history; no trained demand forecast; no live traffic, actual GPS or proof of delivery; no verified truck-access/ban geography or temperature telemetry. One tour per truck, no reload, breaks, dock queues or depot pooling. Road validation checks an existing sequence and may leave feasible alternatives undiscovered. Public routing availability and synthetic road snapping limit accuracy.
+
+Browser-local storage is independent by origin/device. Apply edits before backing up. All exports are CSV; settings and synthetic retailer CSVs can be imported, with older JSON backups still accepted. Public references cannot become dispatch masters. Plan reports are not settings backups; avoid summing summary and vehicle record types together.
+
+## Submission and panel demonstration
+
+PART 3 | A CLEAR 30-MINUTE LEADERSHIP DISCUSSION
+
+| Segment | Suggested demonstration |
+| --- | --- |
+| 15 min: approach and live demo | Business question; explain space/weight/time; open Pasig; inspect road route and times; show one unserved reason; test attendance and peak resources |
+| 5 min: how it was built | React/TypeScript/Vite, MapLibre and browser logic; AI-assisted coding and debugging; seeded data; invariant tests; road validation and CSV revisions |
+| 10 min: Q&A | Defend assumptions, missing history, order versus portion counts, early returns, cost scope and next production steps |
+
+### Three concise answers to rehearse
+
+- Why 254 when there are 200 orders? Fifty-four mixed baskets need separate frozen and dry deliveries. There are 254 required portions; full parent coverage needs every portion.
+
+- Why are trucks back at 3 PM? Their current loaded tours ended. No reload or reinsertion is planned; inspect failed timings and search limits before adding trucks.
+
+- Does 100% on time prove all stores were served? No. It checks only scheduled portions. The app also shows scheduled/required portions, incomplete parent orders and unserved reasons.
+
+### Verification and practical limits
+
+The updated application passes 106 automated tests and the TypeScript/Vite production build. Checks cover payload/temperature, full windows, depot return, crew, peak, costs, conservation, road fixtures, CSV round-trips and server-rendered scope views. The existing large MapLibre bundle warning remains. Server-rendered and HTTP checks do not prove browser interactions, WebGL, actual delivery feasibility or spreadsheet display.
+
+### Submission links
+
+Source repository: https://github.com/domzxc/locusprototype
+
+Application address: https://domtransport.onrender.com
+
+Approach PDF: DomTransport-Approach.pdf. Accompanying email draft: docs/submission-email.md. Check the deployment record for the latest public-release verification before sending. No email is sent by this document generator.
+
+### Useful technical references
+
+Implementation and validation: engine.js, scenarios.js, road-routing.js, staffing.js, costing.js, csv-exports.js and docs/verification.md. Rehearsal: docs/panel-guide.md. Provider references: project-osrm.org/docs/v5.24.0/api/ and render.com/docs/static-sites.
+
+> Recommended next stage: obtain the real history and operating data, calibrate time/cost assumptions, benchmark a routing solver, validate truck access and cold-chain controls, then run a limited field pilot before claiming business savings.

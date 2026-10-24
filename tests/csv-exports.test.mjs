@@ -38,7 +38,8 @@ test('network scope filters totals and export rows without changing other depot 
  }
 });
 test('dispatch CSV retains every frozen/dry portion with assignment status and precise missing reasons',()=>{
- const c=copy(defaults),orders=generateOrders(c),p=plan(orders,c,{A:0,B:1}),rows=dispatchRows(orders,p,c,'normal','current');
+ const c=copy(defaults),orders=generateOrders(c),p=plan(orders,c,{A:0,B:1}),rows=dispatchRows(orders,p,c,'normal','current',{temporary_crew_experiment:true,experiment_extra_drivers:4});
+ assert.ok(rows.every(r=>r.temporary_crew_experiment===true&&r.experiment_extra_drivers===4));
  const jobs=rows.filter(r=>r.record_type==='delivery');assert.equal(jobs.length,p.deliveryTotal);
  assert.equal(jobs.filter(r=>r.status==='Unserved (planned)').length,p.unassignedDeliveries.length);
  assert.ok(jobs.filter(r=>r.shipment==='frozen').every(r=>r.vehicle===''&&r.reason));

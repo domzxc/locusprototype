@@ -56,7 +56,7 @@ The dedicated Retailer management page now handles receiving schedules previousl
 
 Frozen and dry products travel separately: Type A carries only ice cream; Type B carries only the other four SKUs. Mixed baskets generate two delivery jobs, while each local order book retains its parent retailer orders. Full order coverage requires all jobs of that order to be assigned. Partially planned orders remain in the incomplete-order list. Assigned-job window compliance is a modeled planning measure; actual deliveries are not tracked. All app exports now use CSV: network summaries, dispatch rows, allocation, retailer masters, public references and full settings backups. Settings CSV preserves all six masters and can be imported in Data studio. Legacy version-1/version-2 JSON settings imports remain supported. See [CSV formats and filtering](docs/csv-and-network-filter.md).
 
-Read [the approach draft](docs/approach-draft.md), [panel script](docs/panel-guide.md), [deployment handoff](docs/deployment.md) and [verification record](docs/verification.md). The PDF is deferred until the approach is finalized, as requested.
+Read [the approach draft](docs/approach-draft.md), [panel script](docs/panel-guide.md), [deployment handoff](docs/deployment.md) and [verification record](docs/verification.md). The reviewed [approach PDF](output/pdf/DomTransport-Approach.pdf) is available with a [submission email draft](docs/submission-email.md).
 
 ## Hosting
 
@@ -98,3 +98,10 @@ Panel-friendly explanation: the in-app Panel Guide states the problem, how Parts
 See [depot orders and current trucks](docs/depot-planning.md). Current fleet is now distinct from recommended fleet: peak demand does not automatically create additional vehicles.
 
 Read [unserved diagnostics and early returns](docs/unserved-diagnostics.md) for the distinction between missed receiving deadlines, capacity/crew shortages and unresolved search limits.
+
+## Submission package
+
+- [Approach PDF](output/pdf/DomTransport-Approach.pdf), generated with `python scripts/build_submission.py` (requires ReportLab and installed Segoe UI fonts).
+- [Email draft](docs/submission-email.md) with source and app links; no email has been sent.
+- [Render verification](docs/deployment-verification.md): public CSV/filter release observed after the user-triggered deploy; later releases must be checked separately.
+- [Fleet experiment explanation](docs/depot-planning.md): extra physical trucks require sufficient driver/helper cover to produce more routes.

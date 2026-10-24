@@ -38,6 +38,18 @@ test('network scope renders only the chosen depot with matching totals and basel
  }finally{await server.close();}
 });
 
+test('fleet readiness explains crew-blocked versus ready idle trucks beside allocation experiments',async()=>{
+ const {initializeNetwork}=await import('../network.js');const {copy,defaults,generateOrders,plan}=await import('../engine.js');
+ const c=initializeNetwork(copy(defaults)).network.Bulacan,p=plan(generateOrders(c),c,{A:2,B:10});
+ const server=await createServer({server:{middlewareMode:true,hmr:false},appType:'custom'});
+ try{
+  const {default:Readiness}=await server.ssrLoadModule('/src/FleetReadiness.tsx');
+  const html=renderToString(createElement(Readiness,{plan:p})).replace(/<!--[\s\S]*?-->/g,'');
+  for(const label of ['Allocated trucks versus active routes','Crew-ready','Active routes','Ready without a route','Blocked by crew','Adding trucks does not add drivers/helpers'])assert.ok(html.includes(label),label);
+  assert.match(html,/<td>Type B<\/td><td>10<\/td><td>6<\/td><td>6<\/td><td>0<\/td><td>4<\/td>/);
+ }finally{await server.close();}
+});
+
 
 test('depot attendance fields render per type and applied staff shortages remain visible',async()=>{
   const {initializeNetwork}=await import('../network.js');

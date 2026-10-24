@@ -52,3 +52,9 @@ Unavailable trucks remain physical assets and retain the modeled idle vehicle al
 Worked approximate Pasig example (default 100 orders): 2 A + 6 B physical trucks with full attendance fully plan 93 orders. Keeping those trucks but reducing present Type B helpers from 6 to 3 (one helper/truck) leaves 2 A + 3 B crew-ready trucks, fully plans 47 orders and incurs PHP 2,400 idle allowance for the three blocked dry trucks. These are deterministic model outputs, not observed attendance or delivery performance. Road validation can reduce coverage further.
 
 See [Operations review](operations-review.md) for depot tab behavior and the Dispatch served/incomplete order lists.
+
+## Why adding trucks may not expand Vehicle routes
+
+Vehicle routes lists only trucks with assigned deliveries. The dispatch fleet controls change hypothetical trucks, not saved driver/helper attendance. For fresh Bulacan defaults, 2 A + 10 B trucks with the original crew still permit only 2 A + 6 B staffed trucks. The new readiness table separates allocated, crew-ready, active routes, ready without a route and crew-blocked counts.
+
+Enable **Include temporary driver/helper cover for this fleet experiment** to test added trucks with explicitly assumed additional crew. It preserves saved attendance and reports the extra headcounts; CSV dispatch rows include experiment flags/headcounts. Disable or Use saved current fleet to remove the temporary cover. Scenario/depot/resource changes and settings Apply also clear it. Actual availability must be edited and applied in Depot planning. Staffing caps remain enforced; extra crew does not guarantee every truck receives a feasible route. Regular temporary wages/rental premiums remain outside the separate budget, as with proposed peak resources.

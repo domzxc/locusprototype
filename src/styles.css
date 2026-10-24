@@ -506,3 +506,5 @@ td small,.manifest td:nth-child(3){font-size:.875rem}
   .data-actions,.settings-actions,.notice,.method-note{align-items:flex-start}
   .notice{flex-wrap:wrap}.map-wrap{height:380px}
 }
+
+.fleet-crew-option{flex:1 1 100%;border-top:1px solid var(--line);padding-top:16px}.fleet-crew-option .check{margin-top:0}.fleet-crew-option p{font-size:.875rem;margin:10px 0;line-height:1.7}.fleet-readiness{margin-top:16px}.fleet-readiness>strong{display:block;margin-bottom:12px}
