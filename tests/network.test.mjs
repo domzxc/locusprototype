@@ -97,9 +97,9 @@ test('new retailer IDs avoid imported IDs anywhere in the network',()=>{
   assert.throws(()=>nextRetailerId(['RET-999999']));
 });
 
-test('network summaries handle six empty local masters without fake coverage',()=>{
+test('network summaries handle six empty masters and zero fleets without fake coverage',()=>{
   let root=initializeNetwork(copy(defaults));
-  for(const name of Object.keys(root.network))root=updateDistributor(root,name,{...root.network[name],retailers:[]});
+  for(const name of Object.keys(root.network))root=updateDistributor(root,name,{...root.network[name],retailers:[],currentFleet:{A:0,B:0}});
   const totals=summarizeNetwork(networkPlans(root));
   for(const value of Object.values(totals))assert.equal(value,0);
 });

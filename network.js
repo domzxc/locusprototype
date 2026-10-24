@@ -11,7 +11,11 @@ const locations = {
 
 export function initializeNetwork(value) {
   const c=validateConfig(value);
-  if(c.network)return copy(c);
+  const withFleet=local=>{
+    const recommended=allocate(generateOrders(local),local);
+    return {...local,currentFleet:local.currentFleet??{A:Math.min(500,recommended.A),B:Math.min(500,recommended.B)}};
+  };
+  if(c.network){const network=Object.fromEntries(Object.entries(c.network).map(([name,local])=>[name,withFleet(local)]));return validateConfig({...network.Pasig,network});}
   const profiles=c.retailers?getRetailers(c):undefined;
   const network={}, used=new Set((c.retailers??[]).map(r=>r.id));
   for(const [index,d] of DISTRIBUTORS.entries()) {
@@ -30,7 +34,7 @@ export function initializeNetwork(value) {
         const id=`RET-${number}`;used.add(id);return {...r,id};
       });
     }
-    network[d.name]=local;
+    network[d.name]=withFleet(local);
   }
   return validateConfig({...network.Pasig,network});
 }
@@ -60,10 +64,29 @@ export function updateDistributor(root,name,value) {
   return validateConfig({...network.Pasig,network});
 }
 
+export function setDepotWorkload(root,name,count,currentFleet) {
+  if(!Number.isInteger(count)||count<0||count>500)throw Error('Use 0-500 whole retailer orders for the demo day.');
+  if(!currentFleet)throw Error('Enter current Type A and Type B truck counts.');
+  const local=copy(distributorConfig(root,name));
+  local.currentFleet=copy(currentFleet);local.dailyOrders=count;
+  validateConfig(local);
+  const master=getRetailers(local),active=master.filter(r=>r.enabled).length,extra=Math.max(0,count-active);
+  if(master.length+extra>500)throw Error('This master would exceed 500 profiles. Restore archived profiles or request fewer orders.');
+  if(extra){
+    const pool=getRetailers({...local,retailers:undefined,dailyOrders:undefined,receivingHours:{},orders:500});
+    const ids=Object.values(root.network).flatMap(c=>(c.retailers??[]).map(r=>r.id));
+    for(let i=0;i<extra;i++){
+      const id=nextRetailerId(ids);ids.push(id);
+      master.push({...pool[master.length],id,name:`Demo Retailer ${id.slice(4)}`});
+    }
+  }
+  return updateDistributor(root,name,{...local,retailers:master,receivingHours:{}});
+}
+
 export function networkPlans(root,scenario='normal') {
   return DISTRIBUTORS.map(d=>{
-    const config=distributorConfig(root,d.name), orders=generateOrders(config,scenario), fleet=allocate(orders,config);
-    return {...d,config,orders,fleet,result:plan(orders,config,fleet)};
+    const config=distributorConfig(root,d.name), orders=generateOrders(config,scenario), recommended=allocate(orders,config),fleet=config.currentFleet??recommended;
+    return {...d,config,orders,recommended,fleet,result:plan(orders,config,fleet)};
   });
 }
 

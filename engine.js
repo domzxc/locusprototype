@@ -44,7 +44,7 @@ export function generateOrders(c, scenario = 'normal') {
     const receiving = c.receivingHours?.[id];
     const order={id,name:`${['Sari-sari','Family Mart','Mini Grocery','Trading Store'][i%4]} ${i+1}`,zone,area:z.name,lng:z.lng+(rand()-.5)*.014,lat:z.lat+(rand()-.5)*.014,quantities,volume,weight,cold:quantities[1]>0,open:receiving?.open??retailer?.open??open,close:receiving?.close??retailer?.close??Math.min(1020,open+240),receivingClosed:receiving?.closed??retailer?.closed??false,service:c.stopBase+quantities.reduce((s,q,p)=>s+q*(c.service[p]+c.loadService[p]),0)};
     return retailer?{...order,name:retailer.name,address:retailer.address,lng:retailer.lng,lat:retailer.lat}:order;
-  }).filter((_,i)=>!roster||(roster[i].enabled&&roster[i].distributor===(c.distributor??'Pasig')));
+  }).filter((_,i)=>!roster||(roster[i].enabled&&roster[i].distributor===(c.distributor??'Pasig'))).slice(0,c.dailyOrders);
 }
 export function getRetailers(c) {
   if(c.retailers) return copy(c.retailers).map(r=>{
@@ -212,6 +212,8 @@ export function validateConfig(c) {
     const values=c[key]===undefined?fallback:c[key];
     if(!Array.isArray(values)||values.length!==5||values.some(v=>!finite(v,.000001,max))) throw Error(`Invalid ${key}: provide five positive per-box CBM/KG values.`);
   }
+  if(c.dailyOrders!==undefined&&(!Number.isInteger(c.dailyOrders)||!finite(c.dailyOrders,0,500)))throw Error('Use 0-500 whole daily orders.');
+  if(c.currentFleet!==undefined&&(!c.currentFleet||['A','B'].some(t=>!Number.isInteger(c.currentFleet[t])||!finite(c.currentFleet[t],0,500))))throw Error('Use 0-500 whole current trucks of each type.');
   if(c.distributor!==undefined&&!DISTRIBUTORS.some(d=>d.name===c.distributor)) throw Error('Unknown distributor.');
   if(c.depot!==undefined&&(!c.depot||!finite(c.depot.lng,120.5,121.5)||!finite(c.depot.lat,14,15.4))) throw Error('Invalid depot coordinates.');
   if(c.distributor&&c.retailers?.some(r=>r.distributor!==c.distributor)) throw Error('Retailer master contains a different distributor.');

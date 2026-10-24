@@ -30,7 +30,7 @@ Main variables: distributor-to-retailer assignment; order counts; product mix/bo
 |---|---|
 | One distributor, about 100 synthetic orders | Select Pasig. A fresh master starts with 100 profiles; saved edits may differ. The same workflow is also available for the other five distributors |
 | Location, SKU mix, volume and delivery window | Order book and retailer/product masters show coordinates, boxes, CBM/KG and receiving hours |
-| Vehicles allocated in Part 1 | The recommendation directly supplies the daily fleet; override counts only for a what-if test |
+| Vehicles allocated in Part 1 | Initial current fleet is assumed from the normal recommendation once. Save actual scenario availability in Depot planning, compare current vs recommended, and use temporary overrides for what-if tests |
 | Vehicle assignment and sequence on a map | Wait for automatically requested roads, select a truck, inspect its numbered manifest and play the road-following simulation |
 | Capacity, windows and frozen compatibility | Both CBM/KG limits, full handling before store close, shift return and temperature separation are enforced; road-infeasible stops remain exceptions |
 | Vehicles, utilization, distance, on-time and cost | Show used/allocated vehicles, truck space use, road KM, assigned-job window compliance, complete-order coverage, drops and the cost breakdown |
@@ -124,3 +124,8 @@ Philippine-unit defence: "We plan against both CBM and KG because a load can rea
 **Does GPS prove the route is drivable?** No. Use road routes & recheck obtains OSRM driving-profile geometry, road-leg distances and base durations, then checks the existing sequence against modeled traffic factors, full receiving windows and shift return. GPS follows that road geometry but remains simulated. Truck dimensions, legal access, closures and retailer entrances need verification. Approximate mode remains clearly labeled. More realistic road times may reduce coverage; show exceptions rather than claiming a perfect plan.
 
 **What does the cost now include?** The operating estimate includes base transport, idle ownership/lease, additional maintenance, a flat toll allowance and assumed crew overtime beyond paid hours. Expected spoilage and unassigned contribution margin are separate scenario exposure, not confirmed expenses. Rates are editable assumptions, not actual invoices or statutory wage calculations. Set extras to zero if already included in base rates. Tax, financing/insurance detail and seasonal procurement pricing are not separately modeled. See [road/cost guide](road-routing-and-costs.md) for the worked example.
+
+
+## Daily orders and current trucks
+
+Open **Depot planning** in the sidebar. Each depot has + / - controls for daily parent-order count, current Type A vans and current Type B trucks. Apply the depot plan to save and recalculate. Initial current counts are synthetic assumptions copied from the normal recommendation once; peak demand does not create trucks automatically. Compare saved availability with normal/peak recommendations. Dispatch and Network overview use saved current fleets; Try recommended fleet is a temporary local experiment. Lowering orders preserves retailer profiles; raising demand beyond active profiles adds synthetic stores.

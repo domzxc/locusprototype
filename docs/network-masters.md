@@ -14,7 +14,7 @@ Depot coordinates, local clusters, traffic, demand and windows are illustrative.
 
 ## Plans and totals
 
-Each distributor starts/returns at its own modeled depot; its simulated GPS uses that depot. Type A carries frozen jobs, B dry jobs; volume, weight, full receiving window and shift-return constraints remain enforced. Jobs left unassigned stay visible. Network coverage is complete parent orders divided by total parent orders; average drops is total assigned visits divided by used vehicles. Network costs/distances are sums, not averages. Local fleet overrides are temporary experiments; Network overview uses each recommended allocation and does not pool vehicles between depots.
+Each distributor starts/returns at its own modeled depot; its simulated GPS uses that depot. Type A carries frozen jobs, B dry jobs; volume, weight, full receiving window and shift-return constraints remain enforced. Jobs left unassigned stay visible. Network coverage is complete parent orders divided by total parent orders; average drops is total assigned visits divided by used vehicles. Network costs/distances are sums, not averages. Local fleet overrides are temporary experiments; Network overview uses each saved current fleet and does not pool vehicles between depots.
 
 ## Persistence and migration
 
@@ -31,4 +31,7 @@ Browser checklist: open each distributor; confirm map/depot/manifest locality; e
 Export all settings before rollback. Revert the feature commit to restore the previous Pasig UI; the old app reads the mirrored Pasig fields but cannot expose the other five masters. Keep the exported network JSON to restore them with the expanded app.
 
 
-Optional road validation and cost extension: [road/cost guide](road-routing-and-costs.md). Each local dispatch can request OSRM road validation; overall Network overview remains an explicitly approximate baseline with recommended fleets. Each master now also stores editable operating allowances and risk/opportunity inputs.
+Optional road validation and cost extension: [road/cost guide](road-routing-and-costs.md). Each local dispatch can request OSRM road validation; overall Network overview remains an explicitly approximate baseline with saved current fleets. Each master now also stores editable operating allowances and risk/opportunity inputs.
+
+
+Current demand/inventory controls are in [Depot planning](depot-planning.md). Daily demand can select fewer active profiles without deleting them; current trucks are saved separately from normal/peak recommendations. Earlier numeric peak examples that allocate the recommended peak fleet are recommendation experiments, not the default current-fleet plan.

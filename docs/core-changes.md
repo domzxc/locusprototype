@@ -17,7 +17,7 @@ Panel review entry point. This describes the current implementation and why the 
 | Distinguish allocation from dispatch feasibility | Aggregate workload counts cannot capture every local route constraint | Workload sizing recommends A/B counts; a separate greedy planner checks each assigned route | A vehicle-count increase may help, but a better sequence or different windows may be needed. No optimality claim |
 | Label the on-time measure precisely | Assigned-only compliance can show 100% while other orders are missed | Planned window compliance is displayed alongside complete-order coverage and exceptions | It is not actual on-time delivery: no delivery confirmations exist |
 | Add average drops per used truck | Show planned stop productivity alongside capacity utilization | Assigned delivery visits divided by used vehicles, excluding idle vehicles and depot legs | Separate frozen/dry visits count separately; it is not unique retailers per vehicle |
-| Aggregate network results from local plans | Summing visits/vehicles gives meaningful regional productivity | Coverage uses total complete orders / total orders; drops uses total visits / total used vehicles; distance and costs sum | Network overview uses recommended fleets, not temporary local fleet overrides; no inter-depot pooling |
+| Aggregate network results from local plans | Summing visits/vehicles gives meaningful regional productivity | Coverage uses total complete orders / total orders; drops uses total visits / total used vehicles; distance and costs sum | Network overview uses saved current fleets, not temporary local fleet overrides; no inter-depot pooling |
 | Keep browser data portable on static hosting | The authorized scope is a frontend prototype without a backend | Browser localStorage plus validated settings/master import/export; Render static-site configuration | Each browser/origin has its own settings. GitHub hosts source; a live Render deployment has not been verified in this session |
 | Keep public references separate | Public store addresses do not establish supplier receiving hours or synthetic demand | Reference catalog is visible but excluded from dispatch and rejected as a master import | No real delivery customer relationship, verified receiving schedule or geocode is inferred |
 
@@ -35,7 +35,7 @@ New road/cost extension: optional OSRM validation now replaces straight connecti
 
 ## What the evidence supports
 
-The latest implementation has 53 passing automated checks and a successful TypeScript/Vite production build. A server-rendering smoke check covered the overview and all six settings/retailer views. Browser interactions, map/WebGL visual behavior and hosted Render smoke tests remain unverified. The known large MapLibre bundle warning remains documented.
+The latest implementation has 58 passing automated checks and a successful TypeScript/Vite production build. A server-rendering smoke check covered the overview and all six settings/retailer views. Browser interactions, map/WebGL visual behavior and hosted Render smoke tests remain unverified. The known large MapLibre bundle warning remains documented.
 
 These checks support the modeled invariants and reproducibility. They do not establish real-world fleet sufficiency, navigable roads, temperature compliance, actual delivery performance, regulatory compliance or cost savings.
 
@@ -43,3 +43,6 @@ Read the [module review notes](prototype-review-notes.md) for calculations and t
 
 
 Panel simplicity update: Panel Guide now states the brief and maps Parts 1/2 to implemented behavior. Pasig depot ownership is explicit. Binding-resource math has a space/weight/time explanation; traffic is entered as extra time percentages, and risk inputs use plain business labels. Roads are preferred before playback, with an explicit approximate fallback. The user chose assumed traffic rather than a live-provider integration.
+
+
+Depot planning extension: daily order-count and current A/B availability inputs are saved per distributor. Recommendations are displayed separately. Current fleet is initially assumed once from the normal estimate, then remains fixed across normal/peak and demand changes. Day-demand reductions preserve profiles; increases can append synthetic profiles. See [module guide](depot-planning.md).

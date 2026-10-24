@@ -43,3 +43,8 @@ Added a manual OSRM road-validation action to each local dispatch: sequential/ca
 ## 24 October 2026: sales-audience panel guide and road-first playback
 
 Added in-app problem statement and Part 1/Part 2 requirement mapping; clarified six independent depots and Pasig's example scope. Replaced binding-resource jargon with space/weight/time comparisons and optional calculation details. Traffic fields now show assumed extra-time percentages; cost-risk labels use business language with examples. Dispatch prefers automatic road validation and locks/hides straight-line playback until roads arrive, unless approximate mode is explicitly selected. Added playback speed controls, smaller time steps, marker reuse and driving/waiting/handling columns. The user chose assumed traffic only; no live feed was connected. All 53 tests, production build and SSR checks pass; browser interaction/visual QA and Render remain unverified.
+
+
+## 24 October 2026: depot orders and current fleet controls
+
+Added Depot planning navigation and + / - / direct inputs for each depot's daily order target and current A/B availability. Apply saves/recalculates per depot; normal/peak recommendations stay distinct. Dispatch and Network overview use saved current fleets, with optional temporary recommended-fleet experiments. Demand reductions preserve profiles; extra demand can append synthetic profiles within the 500-master limit. Legacy current counts are assumed once from normal recommendations, not claimed real inventory. All 58 tests, production build and SSR checks pass. Browser interaction/layout and Render remain unverified. See depot-planning.md for data semantics and rollback.

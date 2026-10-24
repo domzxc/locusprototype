@@ -31,7 +31,7 @@ Sources: [OSRM API documentation](https://project-osrm.org/docs/v5.24.0/api/) de
 
 No. It provides a road-network-based **driving-profile** path. It does not verify vehicle height/weight/access restrictions, current closures, legal truck-ban geography, private retailer entrances, unloading access or temperature control. Retailer points are synthetic and snapped to nearby roads; the UI reports maximum snap distance, and points over 1 KM from a snapped road are rejected. Stops are shown at snapped points in road mode. First/last-metre access needs field verification.
 
-GPS remains simulated. It interpolates by distance along each road leg between scheduled times, with waiting/handling phases. It does not model speed changes within a leg or actual driver events. The network overview remains the **approximate recommended-fleet baseline**, explicitly labeled; it does not aggregate temporary local road-validation results or local fleet overrides.
+GPS remains simulated. It interpolates by distance along each road leg between scheduled times, with waiting/handling phases. It does not model speed changes within a leg or actual driver events. The network overview remains the **approximate current-fleet baseline**, explicitly labeled; it does not aggregate temporary local road-validation results or local fleet overrides.
 
 ## Cost assumptions
 
@@ -102,3 +102,6 @@ No application backend or paid dependency was added. For rollback, export settin
 The Panel Guide now maps the business problem to Part 1 and Part 2 explicitly. Pasig serves its own assigned retailers; it is not the central depot for all six. Fleet sizing is explained as checking space, weight and delivery hours, with technical calculation available on demand. Traffic controls display extra time percentages while retaining existing internal factors; no saved numerical assumptions change. The user explicitly selected assumed traffic, so no live provider/key was added.
 
 Roads are preferred on opening Dispatch. Straight route connections are hidden and playback/scrubbing are disabled until road data arrives, unless approximate mode is explicitly selected. Failed/cancelled requests do not unlock straight-line playback silently. Playback has Slow/Demo/Fast speeds and uses smaller time steps; map markers update in place. Store manifests separate driving, receiving/ban waiting and handling, including loading/unloading/fixed allowances. Browser interaction and smoothness remain unverified because no supported browser is available.
+
+
+Current demand/inventory controls are in [Depot planning](depot-planning.md). Daily demand can select fewer active profiles without deleting them; current trucks are saved separately from normal/peak recommendations. Earlier numeric peak examples that allocate the recommended peak fleet are recommendation experiments, not the default current-fleet plan.

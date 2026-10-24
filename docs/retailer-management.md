@@ -14,7 +14,7 @@ Choose a distributor in the sidebar/workspace selector, then open **Retailer man
 
 Each master supports up to 500 profiles and globally unique RET- IDs. Distributor ownership is fixed to the active workspace. Archive/restore is reversible; closed retailers remain demand, archived retailers leave demand. Archiving preserves remaining seeded baskets; replacing/reordering a master or changing the seed may change baskets. New IDs consider all applied masters and local draft IDs.
 
-Each distributor generates one order per active profile in its own master. An empty master produces no orders. The 50,000 mapped-retailer footprint remains a separate illustrative aggregate, not the size of this synthetic sample or daily order count. The generated-order fallback is hidden once a master exists; add/archive profiles to change sample demand.
+Each distributor selects active profiles in master order up to its saved daily order count; if no count is saved, all active profiles participate. An empty master produces no orders. The 50,000 mapped-retailer footprint remains a separate illustrative aggregate, not the size of this synthetic sample or daily order count. The generated-order fallback is hidden once a master exists; use Depot planning to change day demand, or edit/archive the underlying profiles.
 
 The **receiving-hours stress example** closes the first five active local profiles and gives the next ten short windows. Apply it to demonstrate exceptions. It is a declared scenario, not an estimated real failure rate.
 

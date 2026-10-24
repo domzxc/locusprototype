@@ -41,6 +41,7 @@ The Vite build in `dist` is the deployment artifact. Node 24 is selected for Ren
 
 ## What to explore
 
+- **Depot planning:** use + / - or type the daily order count and current Type A/B trucks for each depot, then Apply. Compare current inventory with normal/peak recommendations. Counts persist in browser settings.
 - **Network overview:** combined results and a six-distributor comparison, with normal/peak scenarios and network plan export. Starts with 100 synthetic profiles per distributor (600 total), preserving saved Pasig data.
 - **Dispatch planner:** select any of the six distributors; 100 seeded orders each by default, five SKUs, cold-only compatibility, volume and weight capacity, full-service windows, shift return and an illustrative truck restriction. Normal/peak scenarios; fleet overrides reveal unassigned orders. Select a vehicle, inspect its manifest and scrub or play modeled GPS. Road geometry is requested automatically when Dispatch opens; playback waits for roads unless approximate mode is explicitly selected. Retry, cancellation and speed controls are available. Traffic remains assumed, not live.
 - **Fleet allocation:** normal and peak Type A/B counts for each independent synthetic sample. The assumed 50,000 mapped-retailer footprint is displayed separately; these sample fleet counts are not a full-scale recommendation.
@@ -89,3 +90,6 @@ See [six-distributor data and migration](docs/network-masters.md) for scoped set
 
 
 Panel-friendly explanation: the in-app Panel Guide states the problem, how Parts 1 and 2 are addressed, and the six-depot scope. Fleet sizing compares space/weight/time; traffic controls show extra travel time percentages, and cost-risk inputs use plain business terms. Store manifests show driving, waiting and handling minutes separately.
+
+
+See [depot orders and current trucks](docs/depot-planning.md). Current fleet is now distinct from recommended fleet: peak demand does not automatically create additional vehicles.

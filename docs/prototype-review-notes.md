@@ -36,7 +36,7 @@ flowchart TD
   H --> I[Overall network totals]
 ```
 
-Editing the master changes the inputs; it does not directly force a desired KPI. Apply changes before switching workspaces. Temporary fleet overrides test a local dispatch scenario; the network summary uses recommendations.
+Editing the master changes the inputs; it does not directly force a desired KPI. Apply changes before switching workspaces. Temporary fleet overrides test a local dispatch scenario; the network summary uses saved current depot trucks.
 
 ## 4. Distributor workspaces and master data
 
@@ -197,7 +197,7 @@ Code: `plan`, `summarizeNetwork` and [NetworkOverview.tsx](../src/NetworkOvervie
 
 Zero denominators produce zero. At network level, sum numerators and denominators before calculating coverage or average drops. For network CBM utilization, weight each local mean by its used vehicles. Do not simply average six distributor percentages.
 
-**Fresh approximate-mode evidence (base transport cost):** results change with saved edits; these figures do not describe every user's browser state.
+**Reference approximate-mode results with each scenario's recommended fleet (base transport cost):** Peak rows try the larger recommended peak fleet; the app now defaults to saved current trucks and does not automatically expand inventory. results change with saved edits; these figures do not describe every user's browser state.
 
 | Scenario | Parent orders complete | Allocated / used vehicles | Estimated KM | Modeled cost | Average drops |
 |---|---:|---:|---:|---:|---:|
@@ -240,4 +240,7 @@ Render's static-site configuration runs `npm ci && npm test && npm run build` an
 
 Rehearsal: open Network overview; select Pasig; explain one mixed basket and its two jobs; inspect A/B manifests; reduce the fleet to expose misses; restore; edit one receiving window or traffic factor; compare another distributor's unchanged master; finish with network totals and limitations. Export settings before experiments so your exact demo state can be restored.
 
-Evidence: 53 automated checks and production build passed at the latest code milestone. Server-rendering smoke passed; browser interaction/map visual QA and Render verification remain outstanding. [Verification record](verification.md) lists the limits. Do not describe the demo as live GPS, trained AI forecasting, legal truck-ban enforcement, proven optimization or verified savings.
+Evidence: 58 automated checks and production build passed at the latest code milestone. Server-rendering smoke passed; browser interaction/map visual QA and Render verification remain outstanding. [Verification record](verification.md) lists the limits. Do not describe the demo as live GPS, trained AI forecasting, legal truck-ban enforcement, proven optimization or verified savings.
+
+
+Current demand/inventory controls are in [Depot planning](depot-planning.md). Daily demand can select fewer active profiles without deleting them; current trucks are saved separately from normal/peak recommendations. Earlier numeric peak examples that allocate the recommended peak fleet are recommendation experiments, not the default current-fleet plan.

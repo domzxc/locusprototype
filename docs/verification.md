@@ -5,7 +5,7 @@ RISK: medium
 
 ## Summary
 
-Made the panel-facing prototype easier to explain: new Problem/Part 1/Part 2 guide, explicit six-depot scope, plain-language space/weight/time sizing and traffic/cost-risk labels. Roads are preferred on entering Dispatch; straight connections and playback stay hidden/locked unless roads load or approximate mode is explicitly chosen. Playback has smaller time steps, speed controls and marker reuse; manifests separate driving/waiting/handling minutes. The user chose assumed traffic only, so no live traffic provider was added. All 53 tests and the production build pass. SSR content checks pass; browser interaction, visual smoothness and Render deployment remain unverified.
+Added a visible Depot planning module with saved per-depot day-order and current Type A/B controls, plus navigation shortcuts and current/recommended comparisons. Demand reductions preserve profiles; increases append synthetic profiles when necessary, subject to limits and global IDs. Dispatch/Network overview now use saved current availability, so peak demand exposes shortages instead of creating trucks. All 58 tests and production build pass; SSR checks pass. Browser clicks, layout and hosted deployment remain unverified.
 
 ## Files changed
 
@@ -13,6 +13,7 @@ Made the panel-facing prototype easier to explain: new Problem/Part 1/Part 2 gui
 |---|---|
 | src/App.tsx | Navigation, dispatch, manifests, order book, fleet overrides, allocation view, panel guide, local persistence and import/export |
 | src/MapView.tsx | MapLibre raster basemap, colored routes, unassigned markers, depot and scheduled simulated positions |
+| src/DepotPlanning.tsx | Six per-depot count steppers, applied/draft state, persistent current availability and normal/peak comparisons |
 | src/PanelGuide.tsx, src/PlanningSteps.tsx, src/planning-explanation.js, src/planning-explanation.d.ts | Sales-audience problem/solution walkthrough, business sizing explanation, traffic percent conversion and stop timeline |
 | src/Settings.tsx | Scoped logistics form, local depot/zone coordinates, CBM/KG packaging and PHT clocks |
 | road-routing.js, road-routing.d.ts, src/useRoadPlan.ts | Public OSRM client/parser, rate spacing/cache, atomic fixed-sequence road validation and stale-request protection |
@@ -23,7 +24,7 @@ Made the panel-facing prototype easier to explain: new Problem/Part 1/Part 2 gui
 | engine.js | Peak case accounting, separate frozen/dry jobs, parent-order completion, receiving-hour validation/enforcement, regional sizing proxy and modeled GPS |
 | src/RetailerManagement.tsx | Synthetic profile CRUD/archive, receiving schedules, validated import/export and separate public-reference catalog; replaces RetailerHours.tsx |
 | src/data/metro-manila-retailer-references.json | Ten source-attributed public address references; receiving windows and verified coordinates deliberately null |
-| tests/planning.test.mjs, tests/retailers.test.mjs, tests/ph-conventions.test.mjs, tests/network.test.mjs, tests/road-cost.test.mjs, tests/explanation.test.mjs | Fifty-three meaningful planning, KPI, master-data and provenance-boundary tests |
+| tests/planning.test.mjs, tests/retailers.test.mjs, tests/ph-conventions.test.mjs, tests/network.test.mjs, tests/road-cost.test.mjs, tests/explanation.test.mjs, tests/depot-planning.test.mjs | Fifty-eight meaningful planning, KPI, master-data and provenance-boundary tests |
 | .gitignore | Exclude environment variants and local tool/settings directories |
 | README.md, docs | Usage, approach equations, baseline results, panel defence, deployment and this record |
 
@@ -31,7 +32,7 @@ Made the panel-facing prototype easier to explain: new Problem/Part 1/Part 2 gui
 
 | Command | Outcome |
 |---|---|
-| npm test | 53 tests passed, zero failures; added traffic-percent compatibility and full stop-timeline accounting to the existing planning/road/cost invariants |
+| npm test | 58 tests passed, zero failures; added saved demand/current-fleet, profile preservation/growth, depot isolation, zero/peak/idle cases and migration checks |
 | npm run build | TypeScript passed; Vite production build succeeded. Known large MapLibre chunk warning |
 | Vite SSR + renderToString smoke | Overview and all six local settings/retailer views rendered with expected local zone/profile content; not a browser interaction test |
 | node --input-type=module baseline calculation | Normal 2 A + 6 B, 8 used, 93 fully planned parent orders, 1 partial, 118/125 jobs, 164.921 km, PHP 14,892.953; peak 3 A + 10 B, 12 used, 100 fully planned, 125/125 jobs, 184.970 km, PHP 20,736.425 |
@@ -137,3 +138,10 @@ Sales-audience explanation and playback update (24 October 2026): clarified Pasi
 Road-first UI review: useRoadPlan requests roads only when Dispatch is active and road preference is selected; base/input or page changes abort stale work. Approximate selection is explicit and persistent for the session. The UI suppresses straight connections and disables play/scrub while no valid road result is available (waiting, cancelled or failed), unless approximate mode is chosen. A previously valid road result can remain playable during a same-input retry. In-flight errors retain the labeled basis. Reused map markers remove per-frame recreation, and 50 ms playback updates replace 3-minute jumps; Slow/Demo/Fast controls use 1/5/15 modeled minutes per second. This is still simulated GPS with assumed traffic. No live provider/key was added after the user's explicit preference.
 
 Verification: all 53 tests pass, including traffic percentage round-trip and exact driving + restriction wait + receiving wait + handling timeline accounting. SSR checks rendered the new guide with Problem/Part 1/Part 2/depot clarification, all six plain-language settings/planning steps and the main overview. Browser inventory remains empty, so automatic requests, disabled controls, speed selection and visual road smoothness are reviewed in code but not interaction-tested. Production build passes with the pre-existing MapLibre size warning. Existing road-provider HTTP smoke evidence above remains applicable; no redundant full-day API request was made. Rollback is a normal revert; numeric settings and cost assumptions are unchanged. New UI behavior and labeling are documented in panel-guide.md and road-routing-and-costs.md.
+
+
+Depot planning (24 October 2026): test-first failure reproduced missing setDepotWorkload export. Added optional dailyOrders and currentFleet validation, normal-inventory migration once, atomic per-depot updates and non-destructive synthetic profile extension. Initial inventory is explicitly assumed, not provided real fleet data. Full settings preserve fields/zeros. Engine day selection filters active ownership then takes the requested count; it still generates random draws before selection to preserve remaining baskets. Counts are bounded 0-500 per day/type; total profiles also stay within 500, with archived-capacity rejection. Current fleet drives dispatch/network baseline; recommendations remain separate normal/peak outputs. Data studio reset preserves inventory and day target. Temporary dispatch fleet experiments stay unsaved/local.
+
+Verification: five new depot tests bring the total to 58, all passing. They cover zero inventory/unserved demand, zero demand/idle expense, peak inventory preservation, current-count import, malformed input atomicity, profile preservation/global ID growth, depot isolation, selected closed-store exceptions and archived-master capacity. The former empty-network fixture now explicitly sets both demand and current fleets to zero: empty retailer masters alone no longer imply zero idle cost. A separate new test checks that retained inventory incurs idle cost on a zero-demand day. No invariant was relaxed to conceal a failure. Production build passes with the existing MapLibre warning.
+
+SSR initially matched raw HTML and failed because React inserts comment boundaries around dynamic text. Normalizing those comments for visible-text checks then passed for all six depot controls, applied day count, Apply action, current/recommended columns and navigation. Browser inventory remains empty; interactions and layout are not claimed verified. Reviewed demand versus master ownership, saved inventory versus recommendations, zero/peak behavior, idle costs, scoped storage and form errors. Source/docs identify earlier peak fleet figures as recommended-fleet experiments. Rollback is a normal feature revert after settings export; no profiles are removed by the control.

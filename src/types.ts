@@ -10,7 +10,7 @@ export interface CostAssumptions {paidHours:number;spoilageRate:number;frozenBox
 export interface CostBreakdown {transport:number;idle:number;maintenance:number;tolls:number;overtime:number;spoilage:number;lostMargin:number;operating:number;economicTotal:number;}
 export interface RoadLeg {km:number;minutes:number;geometry:number[][];}
 export interface Config {
-  costing:CostAssumptions;
+  costing:CostAssumptions; dailyOrders?:number;currentFleet?:{A:number;B:number};
   distributor?:string; depot?:Point; network?:Record<string,Config>;
   seed: number; orders: number; peak: number; speed: number; detour: number; traffic: number;
   start: number; end: number; loading: number; stopBase: number; reserve: number;
