@@ -20,8 +20,34 @@ export function parseRoadResponse(data,count) {
   return {provider:'OSRM driving',legs,snaps};
 }
 
-export function createOsrmClient({fetchImpl=globalThis.fetch,intervalMs=1100}={}) {
+const ROAD_CACHE_KEY='domtransport-road-cache-v1';
+const CACHE_LIMIT=40, CACHE_CHARACTERS=2000000;
+const browserStorage=()=>{try{return globalThis.localStorage;}catch{return null;}};
+// Store coordinate-only road responses, never schedules: traffic and constraints are
+// revalidated on every plan. Cached road geometry expires after seven days.
+export function createOsrmClient({fetchImpl=globalThis.fetch,intervalMs=1100,storage=browserStorage(),cacheTtlMs=7*24*60*60*1000,now=Date.now,timeoutMs=20000}={}) {
   const cache=new Map();let last=0;
+  try{
+    const raw=storage?.getItem(ROAD_CACHE_KEY);
+    if(raw&&raw.length<=CACHE_CHARACTERS){
+      const entries=JSON.parse(raw);
+      if(Array.isArray(entries))for(const entry of entries.slice(-CACHE_LIMIT)){
+        try{
+          if(typeof entry.key!=='string'||!Number.isFinite(entry.expiresAt)||entry.expiresAt<=now()||entry.expiresAt>now()+cacheTtlMs)continue;
+          const count=entry.key.split(';').length;
+          if(count<2||count>70||!entry.key.split(';').every(p=>coordinate(p.split(',').map(Number))))continue;
+          cache.set(entry.key,{expiresAt:entry.expiresAt,data:parseRoadResponse(entry.payload,count)});
+        }catch{/* A corrupt cache entry must not block other routes. */}
+      }
+    }
+  }catch{/* Browser storage is optional; routing remains usable without it. */}
+  function persist(){
+    if(!storage)return;
+    const entries=[...cache].filter(([,value])=>value.expiresAt>now()).map(([key,value])=>({key,expiresAt:value.expiresAt,payload:{code:'Ok',routes:[{legs:value.data.legs.map(leg=>({distance:leg.km*1000,duration:leg.minutes*60,steps:[{geometry:{coordinates:leg.geometry}}]}))}],waypoints:value.data.snaps.map(p=>({location:[p.lng,p.lat],distance:p.metres}))}}));
+    let raw=JSON.stringify(entries);
+    while(raw.length>CACHE_CHARACTERS&&entries.length){entries.shift();raw=JSON.stringify(entries);}
+    try{storage.setItem(ROAD_CACHE_KEY,raw);}catch{/* Quota or private mode: keep the memory cache. */}
+  }
   return async function route(points,{signal}={}) {
     abort(signal);
     if(points.length<2||points.some(p=>!coordinate([p.lng,p.lat])))throw Error('Invalid route coordinates.');
@@ -34,7 +60,9 @@ export function createOsrmClient({fetchImpl=globalThis.fetch,intervalMs=1100}={}
       return {provider:'OSRM driving',legs,snaps};
     }
     const key=points.map(p=>`${p.lng.toFixed(6)},${p.lat.toFixed(6)}`).join(';');
-    if(cache.has(key))return copy(cache.get(key));
+    const cached=cache.get(key);
+    if(cached?.expiresAt>now())return copy(cached.data);
+    cache.delete(key);
     const wait=Math.max(0,last+intervalMs-Date.now());
     if(wait)await new Promise((resolve,reject)=>{
       const finish=()=>{signal?.removeEventListener('abort',cancel);resolve();};
@@ -43,12 +71,18 @@ export function createOsrmClient({fetchImpl=globalThis.fetch,intervalMs=1100}={}
       signal?.addEventListener('abort',cancel,{once:true});
     });
     abort(signal);last=Date.now();
-    const timeout=AbortSignal.timeout(20000), combined=signal?AbortSignal.any([signal,timeout]):timeout;
-    const response=await fetchImpl(`${ROAD_ENDPOINT}/route/v1/driving/${key}?steps=true&overview=false&geometries=geojson&continue_straight=false`,{signal:combined});
-    if(!response.ok)throw Error(`Road service HTTP ${response.status}. Retry later or use the labeled approximate plan.`);
-    const parsed=parseRoadResponse(await response.json(),points.length);
-    if(cache.size>=100)cache.delete(cache.keys().next().value);
-    cache.set(key,parsed);return copy(parsed);
+    const timeout=AbortSignal.timeout(timeoutMs), combined=signal?AbortSignal.any([signal,timeout]):timeout;
+    try{
+      const response=await fetchImpl(`${ROAD_ENDPOINT}/route/v1/driving/${key}?steps=true&overview=false&geometries=geojson&continue_straight=false&generate_hints=false`,{signal:combined});
+      if(!response.ok)throw Error(`Road service HTTP ${response.status}. Retry later or use the labeled approximate plan.`);
+      const parsed=parseRoadResponse(await response.json(),points.length);
+      if(cache.size>=CACHE_LIMIT)cache.delete(cache.keys().next().value);
+      cache.set(key,{expiresAt:now()+cacheTtlMs,data:parsed});persist();return copy(parsed);
+    }catch(error){
+      abort(signal);
+      if(timeout.aborted)throw Error('Road service timed out. Retry to reuse completed cached requests, or select the approximate plan.');
+      throw error;
+    }
   };
 }
 

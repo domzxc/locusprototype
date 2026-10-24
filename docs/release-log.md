@@ -52,3 +52,7 @@ Added Depot planning navigation and + / - / direct inputs for each depot's daily
 ## 24 October 2026: readable manifest timing breakdown
 
 Split store and truck-ban waiting into separate columns, and exposed loading allowance, unloading, stop tasks and total handling in the vehicle manifest. Added a visible explanation of the minute values and conservative loading assumption. Calculations and route feasibility are unchanged.
+
+## 24 October 2026: workspace navigation and faster repeat road loading
+
+Removed implicit Dispatch redirects from depot selection while preserving explicit Open dispatch actions. Network-wide pages now show All. Added bounded, seven-day browser road-response caching, an eight-plan session cache, elapsed progress and actionable timeout handling. Road responses cache geometry/base travel only; changed assumptions still revalidate schedules and costs. A 100-order CLI check took about 18 seconds cold versus 18 milliseconds from the saved cache, with no warm network requests and unchanged results. Public service speed and browser/WebGL interactions are not guaranteed or verified by that check.
