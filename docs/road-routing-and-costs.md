@@ -104,7 +104,7 @@ The Panel Guide now maps the business problem to Part 1 and Part 2 explicitly. P
 Roads are preferred on opening Dispatch. Straight route connections are hidden and playback/scrubbing are disabled until road data arrives, unless approximate mode is explicitly selected. Failed/cancelled requests do not unlock straight-line playback silently. Playback has Slow/Demo/Fast speeds and uses smaller time steps; map markers update in place. Store manifests separate driving, receiving/ban waiting and handling, including loading/unloading/fixed allowances. Browser interaction and smoothness remain unverified because no supported browser is available.
 
 
-Current demand/inventory controls are in [Depot planning](depot-planning.md). Daily demand can select fewer active profiles without deleting them; current trucks are saved separately from normal/peak recommendations. Earlier numeric peak examples that allocate the recommended peak fleet are recommendation experiments, not the default current-fleet plan.
+Current demand/inventory controls are in [Depot planning](depot-planning.md). Daily demand can select fewer active profiles without deleting them; current trucks are saved separately from normal/peak recommendations. Earlier numeric peak examples are historical experiments; see [Peak planning](peak-planning.md) for current order growth, longer shift and proposed/current resource modes.
 
 ## Navigation and loading verification (24 October 2026)
 

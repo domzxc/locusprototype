@@ -21,9 +21,9 @@ The prototype now demonstrates this loop for all six distributors, with an overa
 | SKU unit | A synthetic case; sizes and weights are assumed, not commercial specifications |
 | Cold demand | Approximately 28% chance of ice cream per basket; mixed baskets become separate frozen and dry deliveries |
 | Normal basket | Each dry SKU 0–3 cases; ice cream 1–3 when present; empty basket repaired to one toothpaste case |
-| Peak scenario | Each nonzero case quantity multiplied by 1.6 and rounded up; same retailer count and seeded windows. Rounding means aggregate growth is greater than exactly 60% |
+| Peak scenario | Order count x1.5 and each nonzero SKU quantity x1.6, rounded up; repeated transactions retain assigned retailer windows. Peak shift allowance +2 hours; proposed resources versus current resources are separate views |
 | Windows | 08:00, 09:00, 10:00 or 11:00 opens, four-hour windows, full handling must finish before close |
-| Shift | 06:00–18:00; 25 minutes fixed depot preparation; one trip per vehicle |
+| Shift | 06:00-18:00 normal, up to 20:00 peak by default; 25 minutes fixed depot preparation; one trip per vehicle |
 | Type A | Refrigerated; 5 CBM, 900 KG; PHP 1,700 per used vehicle/day plus PHP 24/km |
 | Type B | Dry; 11 CBM, 2,500 KG; PHP 1,400 per used vehicle/day plus PHP 16/km |
 | Base travel | 22 km/h; haversine distance × 1.35 detour; time × 1.35 network traffic factor × destination zone factor |
@@ -187,3 +187,7 @@ Current inventory extension: [Depot planning](depot-planning.md) saves the day d
 The demand-based normal/peak fleet remains the capacity target. Daily dispatch additionally restricts each depot/type to `min(physical trucks, present drivers, floor(present helpers / helpers required per truck))`; zero required helpers removes the helper limit. One driver per truck and one helper per truck initially are declared assumptions; helper requirement is editable. Scheduled and present headcounts are saved per type/depot, with no pooling or employee-level scheduling. Both approximate and road validation enforce the limit. Unassigned demand and idle physical truck costs remain visible. More vehicles alone cannot solve a staff shortage. Attendance history, leave forecasting and headcount-dependent payroll are not implemented.
 
 Preparation readiness is distinct from departure. The configured no-movement interval applies only to its selected vehicle type; pre-ban legs may run if they finish by the start, while overlapping legs wait before travel. The manifest adds first-leg ban wait to readiness to show modeled departure. The default 7-9 AM Type B setting remains illustrative, editable and unverified against local regulations.
+
+## Updated peak scenario: order frequency, working hours and proposed capacity
+
+[Peak planning](peak-planning.md) supersedes earlier boxes-only peak results. Orders increase by an editable 1.5x default, boxes per order by 1.6x, and the vehicle shift limit by two hours (capped at midnight). Receiving windows do not extend. Repeat transactions retain their assigned retailer master, have unique order IDs and are not silently consolidated. Demand recommendations use the longer peak shift. The default Peak UI models max(saved trucks, recommended peak trucks) plus declared temporary driver/helper cover as a hypothetical package, with Current resources only as the constrained comparator. Inventory/attendance saved in masters stay unchanged. Costs use the same route/resource arithmetic; no normal-cost floor or artificial peak charge is applied. Normal/peak results are synthetic assumptions pending historical calibration.

@@ -15,7 +15,7 @@ export interface CrewAvailability {fleet:{A:number;B:number};blocked:{A:number;B
 export interface Config {
   costing:CostAssumptions; dailyOrders?:number;currentFleet?:{A:number;B:number};attendance?:Attendance;
   distributor?:string; depot?:Point; network?:Record<string,Config>;
-  seed: number; orders: number; peak: number; speed: number; detour: number; traffic: number;
+  seed: number; orders: number; peak: number; peakOrders?:number;peakExtraMinutes?:number;speed: number; detour: number; traffic: number;
   start: number; end: number; loading: number; stopBase: number; reserve: number;
   service: number[]; loadService: number[]; A: VehicleSpec; B: VehicleSpec;
   productCbm:number[]; productKg:number[];
@@ -25,7 +25,7 @@ export interface Config {
   ban: {enabled: boolean; start: number; end: number; type: VehicleType};
 }
 export interface VehicleSpec { capacity: number; weight: number; km: number; fixed: number; }
-export interface Order extends Point {id:string; name:string; address?:string; zone:number; area:string; quantities:number[]; volume:number; weight:number; cold:boolean; open:number; close:number; service:number; receivingClosed?:boolean; reason?:string; parentId?:string; shipment?:'frozen'|'dry';}
+export interface Order extends Point {retailerId?:string;id:string; name:string; address?:string; zone:number; area:string; quantities:number[]; volume:number; weight:number; cold:boolean; open:number; close:number; service:number; receivingClosed?:boolean; reason?:string; parentId?:string; shipment?:'frozen'|'dry';}
 export interface Stop extends Order {roadPoint?:Point&{metres:number};arrival:number; finish:number; wait:number; legKm:number; banWait:number;}
 export interface Route {roadLegs?:RoadLeg[];roadProvider?:string;depot?:Point;id:string;type:VehicleType;stops:Stop[];volume:number;weight:number;km:number;banWait:number;depart:number;return:number;cost:number;}
 export interface Plan {staffing:CrewAvailability;travelBasis:'road'|'approximate';costs:CostBreakdown;roadMeta?:{provider:string;validatedAt:string;maximumSnapMetres:number;method:string};routes:Route[];unserved:Order[];unassignedDeliveries:Order[];served:number;partial:number;deliveryTotal:number;deliveryAssigned:number;averageDrops:number;total:number;km:number;cost:number;util:number;onTime:number;coverage:number;fleet:{A:number;B:number};}

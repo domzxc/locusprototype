@@ -34,4 +34,4 @@ Export all settings before rollback. Revert the feature commit to restore the pr
 Optional road validation and cost extension: [road/cost guide](road-routing-and-costs.md). Each local dispatch can request OSRM road validation; overall Network overview remains an explicitly approximate baseline with saved current fleets. Each master now also stores editable operating allowances and risk/opportunity inputs.
 
 
-Current demand/inventory controls are in [Depot planning](depot-planning.md). Daily demand can select fewer active profiles without deleting them; current trucks are saved separately from normal/peak recommendations. Earlier numeric peak examples that allocate the recommended peak fleet are recommendation experiments, not the default current-fleet plan.
+Current demand/inventory controls are in [Depot planning](depot-planning.md). Daily demand can select fewer active profiles without deleting them; current trucks are saved separately from normal/peak recommendations. Earlier peak results are historical experiments. Current order growth, longer shifts and explicit proposed/current seasonal resources are documented in [Peak planning](peak-planning.md).

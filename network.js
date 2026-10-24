@@ -1,3 +1,4 @@
+import {planningScenario} from './scenarios.js';
 import {assumedAttendance} from './staffing.js';
 import { defaults, copy, DISTRIBUTORS, getRetailers, validateConfig, generateOrders, allocate, plan } from './engine.js';
 
@@ -86,15 +87,15 @@ export function setDepotWorkload(root,name,count,currentFleet,attendance) {
   return updateDistributor(root,name,{...local,retailers:master,receivingHours:{}});
 }
 
-export function networkPlans(root,scenario='normal') {
+export function networkPlans(root,scenario='normal',resourceMode='current') {
   return DISTRIBUTORS.map(d=>{
-    const config=distributorConfig(root,d.name), orders=generateOrders(config,scenario), recommended=allocate(orders,config),fleet=config.currentFleet??recommended;
-    return {...d,config,orders,recommended,fleet,result:plan(orders,config,fleet)};
+    const master=distributorConfig(root,d.name),inputs=planningScenario(master,scenario,resourceMode);
+    return {...d,...inputs,result:plan(inputs.orders,inputs.config,inputs.fleet)};
   });
 }
 
 export function summarizeNetwork(runs) {
   const sum=f=>runs.reduce((s,r)=>s+f(r),0);
   const total=sum(r=>r.result.total),served=sum(r=>r.result.served),vehicles=sum(r=>r.result.routes.length),assigned=sum(r=>r.result.deliveryAssigned);
-  return {driversScheduled:sum(r=>r.result.staffing.driversScheduled),driversPresent:sum(r=>r.result.staffing.driversPresent),helpersScheduled:sum(r=>r.result.staffing.helpersScheduled),helpersPresent:sum(r=>r.result.staffing.helpersPresent),crewBlocked:sum(r=>r.result.staffing.crewBlocked),crewReady:sum(r=>r.result.staffing.fleet.A+r.result.staffing.fleet.B),operatingCost:sum(r=>r.result.costs.operating),riskExposure:sum(r=>r.result.costs.spoilage+r.result.costs.lostMargin),economicTotal:sum(r=>r.result.costs.economicTotal),total,served,vehicles,assigned,allocated:sum(r=>r.fleet.A+r.fleet.B),km:sum(r=>r.result.km),cost:sum(r=>r.result.cost),coverage:total?served/total:0,averageDrops:vehicles?assigned/vehicles:0,util:vehicles?sum(r=>r.result.util*r.result.routes.length)/vehicles:0};
+  return {additionalVehicles:sum(r=>(r.additionalFleet?.A??0)+(r.additionalFleet?.B??0)),temporaryDrivers:sum(r=>r.temporaryDrivers??0),temporaryHelpers:sum(r=>r.temporaryHelpers??0),driversScheduled:sum(r=>r.result.staffing.driversScheduled),driversPresent:sum(r=>r.result.staffing.driversPresent),helpersScheduled:sum(r=>r.result.staffing.helpersScheduled),helpersPresent:sum(r=>r.result.staffing.helpersPresent),crewBlocked:sum(r=>r.result.staffing.crewBlocked),crewReady:sum(r=>r.result.staffing.fleet.A+r.result.staffing.fleet.B),operatingCost:sum(r=>r.result.costs.operating),riskExposure:sum(r=>r.result.costs.spoilage+r.result.costs.lostMargin),economicTotal:sum(r=>r.result.costs.economicTotal),total,served,vehicles,assigned,allocated:sum(r=>r.fleet.A+r.fleet.B),km:sum(r=>r.result.km),cost:sum(r=>r.result.cost),coverage:total?served/total:0,averageDrops:vehicles?assigned/vehicles:0,util:vehicles?sum(r=>r.result.util*r.result.routes.length)/vehicles:0};
 }

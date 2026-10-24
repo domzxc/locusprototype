@@ -5,7 +5,7 @@ RISK: medium
 
 ## Summary
 
-Added driver/helper scheduled and present counts by depot/type, editable helper requirements, an overall attendance card and staffed-truck limits in both dispatch modes. Physical inventory and idle costs remain visible. Playback now distinguishes preparation from restriction waiting, remains at the actual depot during first-leg ban waits and reports modeled departure separately from readiness. All 72 tests and production build pass; SSR checks pass for attendance markup and all six editors. Browser interactions, map visual behavior and hosted deployment remain unverified.
+Expanded peak demand to include order-frequency uplift, larger baskets and an editable later shift, with a labeled proposed seasonal truck/crew package and current-resource comparator. Saved inventory, attendance and receiving windows stay unchanged. Network overview compares orders, resources and cost against normal. Default proposed peak has 900 orders / PHP 240,011.73 operating cost versus 600 / PHP 117,463.63 normally. All 79 tests and production build pass. Browser interaction and hosted deployment remain unverified.
 
 ## Files changed
 
@@ -17,6 +17,7 @@ Added driver/helper scheduled and present counts by depot/type, editable helper 
 | src/PanelGuide.tsx, src/PlanningSteps.tsx, src/planning-explanation.js, src/planning-explanation.d.ts | Sales-audience problem/solution walkthrough, business sizing explanation, traffic percent conversion and stop timeline |
 | src/Settings.tsx | Scoped logistics form, local depot/zone coordinates, CBM/KG packaging and PHT clocks |
 | road-routing.js, road-routing.d.ts, src/useRoadPlan.ts | Public OSRM client/parser, rate spacing/cache, atomic fixed-sequence road validation and stale-request protection |
+| scenarios.js, scenarios.d.ts, src/PeakResourceControl.tsx, tests/peak-scenarios.test.mjs | Shared peak inputs, explicit proposed/current resource control and six peak invariants |
 | costing.js, costing.d.ts, src/CostSummary.tsx | Editable assumptions, operating/risk components and breakdown UI |
 | network.js, network.d.ts, src/NetworkOverview.tsx | Six-master migration, atomic settings import, local configuration updates, ID allocation and sample-day totals/UI |
 | src/styles.css, src/palette.ts | Responsive interface and route colors |
@@ -24,7 +25,7 @@ Added driver/helper scheduled and present counts by depot/type, editable helper 
 | engine.js | Peak case accounting, separate frozen/dry jobs, parent-order completion, receiving-hour validation/enforcement, regional sizing proxy and modeled GPS |
 | src/RetailerManagement.tsx | Synthetic profile CRUD/archive, receiving schedules, validated import/export and separate public-reference catalog; replaces RetailerHours.tsx |
 | src/data/metro-manila-retailer-references.json | Ten source-attributed public address references; receiving windows and verified coordinates deliberately null |
-| tests/planning.test.mjs, tests/retailers.test.mjs, tests/ph-conventions.test.mjs, tests/network.test.mjs, tests/road-cost.test.mjs, tests/explanation.test.mjs, tests/depot-planning.test.mjs | Fifty-eight meaningful planning, KPI, master-data and provenance-boundary tests |
+| tests/planning.test.mjs, tests/retailers.test.mjs, tests/ph-conventions.test.mjs, tests/network.test.mjs, tests/road-cost.test.mjs, tests/explanation.test.mjs, tests/depot-planning.test.mjs | Seventy-nine planning, peak, staffing, cost, road, master-data, provenance and SSR checks |
 | .gitignore | Exclude environment variants and local tool/settings directories |
 | README.md, docs | Usage, approach equations, baseline results, panel defence, deployment and this record |
 
@@ -32,10 +33,10 @@ Added driver/helper scheduled and present counts by depot/type, editable helper 
 
 | Command | Outcome |
 |---|---|
-| npm test | 58 tests passed, zero failures; added saved demand/current-fleet, profile preservation/growth, depot isolation, zero/peak/idle cases and migration checks |
+| npm test | 79 tests passed, zero failures; includes peak count/resource/shift isolation, retained current-fleet shortages, attendance, road, cost and master-data invariants |
 | npm run build | TypeScript passed; Vite production build succeeded. Known large MapLibre chunk warning |
 | Vite SSR + renderToString smoke | Overview and all six local settings/retailer views rendered with expected local zone/profile content; not a browser interaction test |
-| node --input-type=module baseline calculation | Normal 2 A + 6 B, 8 used, 93 fully planned parent orders, 1 partial, 118/125 jobs, 164.921 km, PHP 14,892.953; peak 3 A + 10 B, 12 used, 100 fully planned, 125/125 jobs, 184.970 km, PHP 20,736.425 |
+| node --input-type=module baseline calculation | Normal 2 A + 6 B, 8 used, 93 fully planned parent orders, 1 partial, 118/125 jobs, 164.921 km, PHP 14,892.953; historical boxes-only peak 3 A + 10 B, 12 used, 100 fully planned, 125/125 jobs, 184.970 km, PHP 20,736.425; superseded by peak-planning.md |
 | node --input-type=module receiving-hour stress calculation | Default seed with first 5 retailers closed and next 10 given 15-minute windows: 84 fully planned orders, 16 incomplete including 2 partial, 107/125 jobs assigned, all 5 closed retailers remain incomplete |
 | Invoke-WebRequest http://127.0.0.1:5173/ | HTTP 200 from the local Vite server |
 | cua.getState / createBrowserTab('iab', ...) | No apps or browsers reported; tab creation returned Browser is not available: iab |
@@ -97,10 +98,10 @@ Stage 2: self-reviewed compatibility, input validation, schedule consistency, co
 
 ## Manual browser checks to complete
 
-1. Open the default app and confirm 100 parent orders, 125 jobs, 8 used vehicles, 93% full coverage, 7 incomplete orders including 1 partial, and visible basemap attribution.
+1. Open Network overview and confirm six normal samples (600 parent orders at fresh defaults). Open Pasig, explicitly select approximate mode for the deterministic baseline (100 parents, 125 jobs, 8 used vehicles, 93% full coverage); road-validated results can differ. Verify attribution.
 2. Select A-01, then a B route. Confirm only ice cream on A and only dry SKUs on B, route emphasis, parent retailer IDs, m³/kg manifest, complete receiving windows and return before 18:00.
 3. Play, pause, reset and scrub GPS; verify waiting and depot endpoints. Confirm it is labeled simulated.
-4. Switch to peak: expect 13 allocated, 12 used, all 100 parents / 125 jobs fully assigned at defaults.
+4. Switch to peak: confirm default order growth (100 to 150 per depot), later shift allowance, explicit Proposed seasonal resources and added truck/crew counts. Compare Current resources only without modifying saved inventory/attendance; verify lower constrained spend is explained alongside unmet orders.
 5. Set fleet A/B to zero: expect no routes, zero coverage and 100 explicit unassigned orders. Restore recommendation.
 6. In Data studio raise traffic, Apply, verify recalculation. Reload and confirm persistence. Load defaults and Apply afterward.
 7. Export settings, import the same settings and confirm equivalence. Test malformed JSON and a wrong-version file for visible errors. Export full plan JSON.
@@ -166,3 +167,14 @@ GPS review: route.depart stays preparation-ready time for JSON compatibility. Th
 Deterministic approximate default Pasig evidence: physical 2 A + 6 B with full attendance fully plans 93/100 parents with eight used trucks. Reducing present B helpers from six to three (one helper required/truck) produces crew-ready 2 A + 3 B, five used trucks, 47 fully planned parents and PHP 2,400 idle allowance. These are model outputs, not actual attendance or delivered orders. Existing road-provider networking is unchanged; no redundant live road call was required. SSR tests verify the overview attendance card and all six A/B attendance editors, including an applied zero-driver shortage. UI/browser interaction, scroll/layout and WebGL behavior remain unverified. Review covered demand recommendation versus daily staffing, type/depot isolation, cache input changes, physical-cost preservation, invalid/empty roster cases, departure timing and road snapping. Rollback is a normal feature revert after settings export; older versions ignore attendance fields.
 
 Final attendance checks: npm test passes all 72 tests. npm run build passes TypeScript and Vite with the existing MapLibre size warning. Report validation and git diff --check pass. Browser inventory remains empty; no hosted Render deployment is claimed.
+
+
+Peak order-frequency/resource extension (24 October 2026): old peak increased boxes only and held the same orders/resources, which could reduce route KM and operating spend while leaving more demand unassigned. Added optional per-depot peakOrders (default 1.5, range 1-4) and peakExtraMinutes (default 120, integer 0-360), with effective end capped at midnight. Normal settings/rosters remain unchanged. Generator adds unique repeat transactions on assigned active retailers when demand exceeds the pool; retailerId preserves master identity, coordinates and receiving rules. Empty masters/zero demand stay empty; archived records are excluded. There is no silent profile creation or receiving-window extension. A small epsilon prevents floating-point multiplication such as 100 x 1.1 from becoming 111 orders.
+
+scenarios.js builds effective inputs shared by Dispatch and Network overview. Proposed seasonal mode takes max(saved, recommended peak) trucks, capped at 500/type, and declared temporary driver/helper cover, bounded by 1500 scheduled per role/type. Saved attendance and inventory are not mutated; the saved-attendance card stays based on normal/current records. Current mode holds resources fixed while using peak demand/hours. API networkPlans defaults current for compatibility; UI peak defaults to explicitly proposed. Data studio and Retailer management edit masterConfig rather than effective scenario config, preventing longer shifts or temporary hires from being accidentally saved. Temporary fleet overrides remain separate and are declared in exports. Recommendations, depot cards and allocation exports use the effective peak hours. Costs use unchanged route/resource arithmetic; no forced uplift or minimum-cost floor was added. Temporary wages, rental premiums and recruitment fees remain outside the separate cost model.
+
+Test-first import failed before scenarios.js existed. Six new peak tests cover deterministic count/payload uplift, transaction uniqueness and retailer identity, immutable masters, zero demand/empty masters, archived/closed receiving enforcement, integer-factor rounding, shift extension/midnight cap, temporary resource and replacement-crew isolation, legacy default/bounds, unchanged current fleet and a default proposed network cost/resource increase. The prior zero-fleet test expected 100 unserved parents in both modes; it now explicitly expects 100 normal / 150 peak and still requires every order unserved with zero fleet. The existing conservation, cold-chain, CBM/KG, receiving, shift, attendance, costing and road tests continue to pass. Added an SSR check for proposed/current labels, 900 versus 600 orders, saved/scenario resources, later shift and low-constrained-spend explanation.
+
+Recomputed approximate fresh-default evidence: normal 600 orders, 545 fully planned, 54 available/53 used, operating PHP 117,463.62509, overtime PHP 4,904.64861. Current-only peak: 900 orders, 405 fully planned, 54 available/used, operating PHP 107,617.33018, overtime PHP 4,424.03466. Proposed peak: 900 orders, 877 fully planned, 118 planned/116 used, operating PHP 240,011.72880, overtime PHP 9,268.50705, 64 added trucks/drivers/helpers each. These are synthetic approximate results, not actual attendance or fully priced hiring quotations. Available shift end rises from 18:00 to 20:00; actual route duty determines overtime. No redundant live road API call was needed because provider code is unchanged. Repeat transactions remain separate jobs/handling; drops are job counts, not unique physical store visits.
+
+Final checks: all 79 tests pass; TypeScript and Vite production build pass with the existing MapLibre size warning. SSR verifies the new markup, not click behavior. Browser inventory returned no apps or browsers, so toggle interaction, layout and WebGL/road playback remain unverified. Reviewed normal/peak semantics, master/scenario persistence separation, immutable actual attendance, resource caps, ID/receiving mapping, float and zero boundaries, cost versus unmet demand and export provenance. docs/peak-planning.md documents formulas, updated defaults, historical-result supersession and limits. Rollback is a normal feature revert after settings export; older code ignores optional peakOrders/peakExtraMinutes. Render deployment remains unverified.

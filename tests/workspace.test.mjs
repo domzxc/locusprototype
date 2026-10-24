@@ -36,3 +36,18 @@ test('depot attendance fields render per type and applied staff shortages remain
     assert.ok(html.includes('Applied crew-ready fleet: 0 A +'));
   }finally{await server.close();}
 });
+
+test('peak overview distinguishes proposed resources from saved assets and explains constrained low spending',async()=>{
+ const {initializeNetwork}=await import('../network.js');
+ const {defaults,copy}=await import('../engine.js');
+ const root=initializeNetwork(copy(defaults));
+ const server=await createServer({server:{middlewareMode:true,hmr:false},appType:'custom'});
+ try{
+  const {default:Overview}=await server.ssrLoadModule('/src/NetworkOverview.tsx');
+  for(const mode of ['proposed','current']){
+   const html=renderToString(createElement(Overview,{root,scenario:'peak',resourceMode:mode,onScenario:()=>{},onOpen:()=>{},onOpenAttendance:()=>{},onResourceMode:()=>{}})).replace(/<!--[\s\S]*?-->/g,'');
+   for(const text of ['900 peak orders versus 600 normal orders','Normal baseline:','Scenario A + B','Saved A + B','8:00 PM'])assert.ok(html.includes(text),text);
+   assert.ok(html.includes(mode==='proposed'?'Proposed additions: 64 trucks':'Lower route spending may reflect unassigned deliveries'));
+  }
+ }finally{await server.close();}
+});

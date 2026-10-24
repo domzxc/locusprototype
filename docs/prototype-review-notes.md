@@ -56,7 +56,7 @@ Code: `generateOrders` and `getRetailers` in [engine.js](../engine.js).
 
 Each dry SKU starts with 0-3 boxes. Ice cream has a 28% inclusion probability and 1-3 boxes when included. An empty basket is repaired to one toothpaste box. A seeded random generator makes the scenario reproducible; this is an assumed demand distribution, not a learned one. The observed frozen-order percentage can differ from 28% in a finite sample.
 
-For peak demand, each sampled SKU quantity is multiplied by its local peak factor and rounded up. Example: 3 boxes at 1.6 becomes `ceil(4.8) = 5`; 1 box becomes 2. The multiplier runs before empty-basket repair, so an all-zero basket still becomes one toothpaste box. Consequently total growth may exceed 60%. Retailer count and master receiving windows stay fixed; increased peak order frequency is not modeled.
+For peak demand, each sampled SKU quantity is multiplied by its local peak factor and rounded up. Example: 3 boxes at 1.6 becomes `ceil(4.8) = 5`; 1 box becomes 2. The multiplier runs before empty-basket repair, so an all-zero basket still becomes one toothpaste box. Consequently total growth may exceed 60%. Master retailer count and receiving windows stay fixed. Peak order count now grows separately (default 1.5x); extra transactions can repeat at the same store. A two-hour longer shift allowance and explicitly proposed seasonal truck/crew package are detailed in [Peak planning](peak-planning.md).
 
 Changing a seed, replacing/reordering profiles or changing packaging can change results. Archiving retains random-number consumption for other profiles so it does not reshuffle their baskets.
 
@@ -197,7 +197,7 @@ Code: `plan`, `summarizeNetwork` and [NetworkOverview.tsx](../src/NetworkOvervie
 
 Zero denominators produce zero. At network level, sum numerators and denominators before calculating coverage or average drops. For network CBM utilization, weight each local mean by its used vehicles. Do not simply average six distributor percentages.
 
-**Reference approximate-mode results with each scenario's recommended fleet (base transport cost):** Peak rows try the larger recommended peak fleet; the app now defaults to saved current trucks and does not automatically expand inventory. results change with saved edits; these figures do not describe every user's browser state.
+**Historical reference approximate-mode results before the order-frequency/seasonal-resource extension (base transport cost):** These peak rows used 100 orders per depot and are superseded by [current peak planning results](peak-planning.md). Saved inventory remains unchanged; the UI now defaults to a clearly labeled hypothetical seasonal package on Peak. Results change with saved edits; these figures do not describe every user's browser state.
 
 | Scenario | Parent orders complete | Allocated / used vehicles | Estimated KM | Modeled cost | Average drops |
 |---|---:|---:|---:|---:|---:|
@@ -243,7 +243,7 @@ Rehearsal: open Network overview; select Pasig; explain one mixed basket and its
 Evidence: 58 automated checks and production build passed at the latest code milestone. Server-rendering smoke passed; browser interaction/map visual QA and Render verification remain outstanding. [Verification record](verification.md) lists the limits. Do not describe the demo as live GPS, trained AI forecasting, legal truck-ban enforcement, proven optimization or verified savings.
 
 
-Current demand/inventory controls are in [Depot planning](depot-planning.md). Daily demand can select fewer active profiles without deleting them; current trucks are saved separately from normal/peak recommendations. Earlier numeric peak examples that allocate the recommended peak fleet are recommendation experiments, not the default current-fleet plan.
+Current demand/inventory controls are in [Depot planning](depot-planning.md). Daily demand can select fewer active profiles without deleting them; current trucks are saved separately from normal/peak recommendations. Earlier numeric peak examples are historical experiments. Current peak defaults and the explicit current/proposed resource comparison are documented in [Peak planning](peak-planning.md).
 
 ### Reading the manifest timing columns
 

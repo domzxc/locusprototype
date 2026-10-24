@@ -22,7 +22,7 @@ test('current fleet stays fixed across peak scenarios and plans expose the resul
   for(const scenario of ['normal','peak']){
     const run=networkPlans(root,scenario).find(r=>r.name==='Pasig');
     assert.deepEqual(run.fleet,{A:0,B:0});assert.ok(run.recommended.A>0&&run.recommended.B>0);
-    assert.equal(run.result.served,0);assert.equal(run.result.unserved.length,100);
+    assert.equal(run.orders.length,scenario==='peak'?150:100);assert.equal(run.result.served,0);assert.equal(run.result.unserved.length,run.orders.length);
   }
   const imported=importNetworkSettings({kind:'domtransport-settings',version:2,config:root});
   assert.deepEqual(imported.network.Pasig.currentFleet,{A:0,B:0});

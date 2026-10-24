@@ -12,7 +12,7 @@ Click **Apply [depot] plan** to save and recalculate. Unsaved drafts do not affe
 
 ## Daily demand and retailer profiles
 
-The day count selects the first N enabled retailer profiles in master order. It counts original orders, not boxes or the additional frozen/dry visits. A closed selected store still produces demand and a receiving exception. Archived profiles are excluded. The same store gets at most one parent order on the modeled day; there is no real order-entry or calendar backend.
+The day count selects the first N enabled retailer profiles in master order. It counts original orders, not boxes or the additional frozen/dry visits. A closed selected store still produces demand and a receiving exception. Archived profiles are excluded. On a normal day, the same store gets at most one parent order; peak can generate additional uniquely identified transactions at the same assigned store; there is no real order-entry or calendar backend.
 
 Lowering demand preserves all profiles. Raising it beyond the active profile count appends fictional profiles using local zones/receiving assumptions and globally unique IDs. Existing identities, receiving edits and seeded baskets remain unchanged. The master limit is 500 total profiles, including archived ones. If growth would exceed that limit, the edit is rejected atomically; restore archived profiles or request fewer orders. No profiles are silently deleted or reactivated.
 
@@ -22,7 +22,7 @@ If a retailer import/archive later leaves fewer active profiles than the saved d
 
 No actual truck inventory was supplied. On migration, missing current counts are initialized once from the normal recommendation, capped at the prototype limit of 500 per type. These are declared synthetic availability assumptions, not measured fleet assets.
 
-Dispatch and Network overview use the **saved current fleet**. Peak changes basket sizes and recommendations; it does not create trucks automatically. The fleet allocation view continues to show normal/peak recommendations. A depot can have a shortage for one type and spare trucks of the other type.
+Normal Dispatch and Network overview use the **saved current fleet**. Peak adds order-frequency and basket growth plus extra working hours. Its default proposed-resource view temporarily models seasonal trucks/crews; Current resources only retains saved limits. Neither changes saved inventory or actual attendance. See [Peak planning](peak-planning.md). The fleet allocation view continues to show normal/peak recommendations. A depot can have a shortage for one type and spare trucks of the other type.
 
 The Dispatch **Try recommended fleet** button runs a temporary comparison. **Use saved current fleet** removes that override. Permanent scenario availability changes belong in Depot planning. Temporary overrides are not saved to settings and do not change Network overview. The cost model charges idle allowance for available but unused vehicles, including days with zero demand.
 
@@ -45,7 +45,7 @@ For each truck type:
 
 When no helpers are required, only physical trucks and present drivers limit availability. One driver and the configured helpers are dedicated to each vehicle's single tour; no cross-type or cross-depot staff pooling, split shifts, replacement staff or skill certification is modeled. The demand-based fleet recommendation stays independent; staff shortages limit the daily execution of that recommendation rather than reducing the capacity target.
 
-Apply the depot card to save attendance alongside orders and trucks. Network overview has an attendance card showing present/scheduled drivers and helpers, absences and trucks blocked by staff shortages, with a Manage attendance shortcut. Its comparison table shows crew-ready A/B trucks and attendance per depot. Dispatch shows physical inventory versus crew-ready fleet. Both approximate and road-validated routes enforce crew limits, including temporary fleet experiments. Extra trucks in Try recommended fleet still require present crews.
+Apply the depot card to save attendance alongside orders and trucks. Network overview has an attendance card showing present/scheduled drivers and helpers, absences and trucks blocked by staff shortages, with a Manage attendance shortcut. Its comparison table shows crew-ready A/B trucks and attendance per depot. Dispatch shows physical inventory versus crew-ready fleet. Both approximate and road-validated routes enforce crew limits, including temporary fleet experiments. In Current resources only, extra trucks in Try recommended fleet still require saved present crews. Proposed peak mode separately declares temporary staffing assumptions.
 
 Unavailable trucks remain physical assets and retain the modeled idle vehicle allowance. Staff wages, paid absences, replacement labor and headcount-based payroll are not separately modeled; the existing per-vehicle overtime allowance is unchanged. Spare present staff do not generate vehicles, and staff attendance remains recorded even on a zero-truck or zero-order day.
 

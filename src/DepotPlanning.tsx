@@ -1,5 +1,5 @@
 import {useMemo,useState} from 'react';
-import {allocate,generateOrders} from '../engine.js';
+import {allocate,generateOrders,scenarioConfig} from '../engine.js';
 import {assumedAttendance,crewAvailability} from '../staffing.js';
 import type {Attendance,Config} from './types';
 
@@ -8,7 +8,7 @@ export function CountControl({label,value,max=500,onChange}:{label:string;value:
 }
 function DepotCard({name,config,onSave,onOpen}:{name:string;config:Config;onSave:(name:string,count:number,fleet:{A:number;B:number},attendance:Attendance)=>void;onOpen:(name:string)=>void}){
   const normal=useMemo(()=>allocate(generateOrders(config),config),[config]);
-  const peak=useMemo(()=>allocate(generateOrders(config,'peak'),config),[config]);
+  const peak=useMemo(()=>allocate(generateOrders(config,'peak'),scenarioConfig(config,'peak')),[config]);
   const actual=generateOrders(config).length,current=config.currentFleet??normal;
   const [count,setCount]=useState(config.dailyOrders??actual),[A,setA]=useState(current.A),[B,setB]=useState(current.B),[error,setError]=useState('');
   const [attendance,setAttendance]=useState<Attendance>(()=>structuredClone(config.attendance??assumedAttendance(current)));
