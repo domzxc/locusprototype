@@ -48,3 +48,7 @@ Added in-app problem statement and Part 1/Part 2 requirement mapping; clarified 
 ## 24 October 2026: depot orders and current fleet controls
 
 Added Depot planning navigation and + / - / direct inputs for each depot's daily order target and current A/B availability. Apply saves/recalculates per depot; normal/peak recommendations stay distinct. Dispatch and Network overview use saved current fleets, with optional temporary recommended-fleet experiments. Demand reductions preserve profiles; extra demand can append synthetic profiles within the 500-master limit. Legacy current counts are assumed once from normal recommendations, not claimed real inventory. All 58 tests, production build and SSR checks pass. Browser interaction/layout and Render remain unverified. See depot-planning.md for data semantics and rollback.
+
+## 24 October 2026: readable manifest timing breakdown
+
+Split store and truck-ban waiting into separate columns, and exposed loading allowance, unloading, stop tasks and total handling in the vehicle manifest. Added a visible explanation of the minute values and conservative loading assumption. Calculations and route feasibility are unchanged.

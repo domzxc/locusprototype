@@ -244,3 +244,7 @@ Evidence: 58 automated checks and production build passed at the latest code mil
 
 
 Current demand/inventory controls are in [Depot planning](depot-planning.md). Daily demand can select fewer active profiles without deleting them; current trucks are saved separately from normal/peak recommendations. Earlier numeric peak examples that allocate the recommended peak fleet are recommendation experiments, not the default current-fleet plan.
+
+### Reading the manifest timing columns
+
+Each stop shows driving, wait for store, truck-ban wait, loading allowance, unloading, fixed stop tasks and total handling as separate minute columns. Store wait is early arrival before receiving opens; truck-ban wait happens at the previous location before travel. Neither is included in handling. For example, `89.7 store + 0.0 ban` means about 1 hour 30 minutes waiting for receiving, with no restriction wait. `7.5 handling` is `0.5 loading allowance + 2.0 unloading + 5.0 stop tasks`. These are modeled allowances, not measured operating times. The loading allowance is conservatively charged at the stop; actual warehouse loading is not separately simulated.
