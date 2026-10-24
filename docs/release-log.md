@@ -33,3 +33,8 @@ Standardised capacity and payload labels to CBM/KG, added editable per-box CBM a
 ## 24 October 2026: six-distributor dispatch and master data
 
 Expanded routing from the Pasig pilot to all six distributors with independent synthetic depots, local zones/traffic, retailer receiving schedules and operating assumptions. Added overall Network overview, scoped navigation/editors, aggregate export and version-2 all-settings export with version-1 migration. Existing Pasig data and legacy non-Pasig profile ownership are preserved. Default samples total 600 profiles; 50,000 remains the distinct business footprint, not demo daily demand. All 39 tests and production build pass; server-rendering smoke checks pass for the overview and six local editors. Browser/WebGL and Render verification remain outstanding. See network-masters.md for data ownership, migration, limits and rollback.
+
+
+## 24 October 2026: optional road routes and extended cost estimates
+
+Added a manual OSRM road-validation action to each local dispatch: sequential/cached requests, returned road geometry and metrics, window/shift rechecks, conservative stop trimming, road-following simulated GPS, progress/cancel and explicit approximate fallback. Added per-distributor idle, maintenance, toll and overtime allowances plus separate spoilage and unassigned contribution-margin exposure. Legacy base transport cost remains available; operating and combined scenario totals are additive fields. No backend or API key added. All 51 tests, production build and SSR checks pass; live three-order and 100-order Pasig road checks succeeded. Browser/WebGL and Render verification remain outstanding. See [road/cost guide](road-routing-and-costs.md) for assumptions, observed costs, service limits and rollback.

@@ -2,6 +2,8 @@
 
 Use this as your rehearsal reference. Start with sections 1-3, then work through one retailer basket, one vehicle route and the network summary. The [core-change record](core-changes.md) explains why the product evolved; the [approach draft](approach-draft.md) contains the proposed production mathematical model.
 
+Current extension: read [road routing and extended cost estimates](road-routing-and-costs.md). Road validation is optional per distributor; old tables below explicitly retain approximate-mode base transport for comparison.
+
 ## 1. Your opening explanation
 
 "DomTransport separates fleet allocation from daily dispatch. For each distributor we estimate the refrigerated and dry workload, recommend vehicle counts, then test those vehicles against CBM, KG, receiving windows and shift return. We show missed and partial orders so leadership can assess service and cost together. All operational data in this demonstration is synthetic."
@@ -15,7 +17,7 @@ The business has about 50,000 mapped retailers. That is not a daily order count.
 | Demand | Deterministic synthetic orders and larger peak baskets | Forecast distributor/SKU demand using supplied history and rolling backtests |
 | Allocation | Integer workload heuristic with reserve | Evaluate fleet candidates across scenarios and full ownership/rental/service costs |
 | Daily dispatch | Greedy, constraint-aware sequencing | Benchmark against a heterogeneous-fleet routing solver |
-| Map/travel | Haversine distance, detour and traffic assumptions | Validated road routing and departure-dependent travel times |
+| Map/travel | Approximate baseline plus optional OSRM road geometry/durations and fixed-sequence feasibility validation | Truck-specific access validation and live/departure-dependent traffic |
 | GPS | Schedule-based position interpolation | Actual telemetry and delivery events |
 | AI assistance | Used to help develop code, documentation and tests | No runtime AI or forecasting service is currently connected |
 | Deployment/data | Static Render configuration, browser-local settings and exports | Hosted smoke verification; shared storage only if scope later requires it |
@@ -140,7 +142,7 @@ Weight binds the frozen estimate; time binds dry. Counts are integer recommendat
 
 Panel line: "We size against the binding resource, then validate the suggested fleet against the actual modeled day."
 
-## 10. Travel estimates and Philippine truck-ban time
+## 10. Approximate travel and Philippine truck-ban time
 
 Code: `distance` and `travel` in [engine.js](../engine.js); [PHT helpers](../src/ph-conventions.js).
 
@@ -189,12 +191,13 @@ Code: `plan`, `summarizeNetwork` and [NetworkOverview.tsx](../src/NetworkOvervie
 | Planned window compliance | Assigned jobs finishing by close / assigned jobs | Usually 100% because infeasible jobs are rejected; not actual on-time delivery |
 | CBM utilization | Mean(route CBM / its vehicle CBM capacity) over used vehicles | An average of vehicle ratios, not pooled CBM / pooled capacity; inspect KG and time too |
 | Average drops | Assigned jobs / used vehicles | Frozen/dry visits count separately; depot legs, idle trucks and unassigned jobs excluded |
-| Distance | Sum of modeled route legs, including depot returns | Detoured estimates, not road-router output |
-| Cost | Sum(used vehicle daily charge + route KM * its PHP/KM) | Idle ownership, tolls, overtime, spoilage and lost sales excluded |
+| Distance | Sum of legs including depot returns | OSRM road KM in road mode; detoured estimates in approximate mode |
+| Base transport | Sum(used vehicle daily charge + route KM * its PHP/KM) | Preserved in legacy cost field; operating estimate adds editable idle, maintenance, toll and overtime allowances |
+| Risk / opportunity | Expected frozen spoilage + unassigned contribution margin | Separate from operating costs; see the extended-cost guide |
 
 Zero denominators produce zero. At network level, sum numerators and denominators before calculating coverage or average drops. For network CBM utilization, weight each local mean by its used vehicles. Do not simply average six distributor percentages.
 
-**Fresh default evidence:** results change with saved edits; these figures do not describe every user's browser state.
+**Fresh approximate-mode evidence (base transport cost):** results change with saved edits; these figures do not describe every user's browser state.
 
 | Scenario | Parent orders complete | Allocated / used vehicles | Estimated KM | Modeled cost | Average drops |
 |---|---:|---:|---:|---:|---:|
@@ -209,9 +212,9 @@ More peak vehicles can improve coverage despite bigger baskets; this is not evid
 
 Code: [MapView.tsx](../src/MapView.tsx), `positionAt` in [engine.js](../engine.js), manifest UI in [App.tsx](../src/App.tsx).
 
-MapLibre displays straight route connections over a basemap, assigned stops, red incomplete-order markers and the selected depot. A partial parent can therefore appear as an exception at a location that also has an assigned stop. Red is an incomplete plan marker, not an actual failed delivery event.
+MapLibre displays OSRM road geometry after road validation, or labeled straight connections in approximate mode, assigned stops, red incomplete-order markers and the selected depot. A partial parent can therefore appear as an exception at a location that also has an assigned stop. Red is an incomplete plan marker, not an actual failed delivery event.
 
-The manifest is the numerical route record: sequence, products, receiving window, service start/finish, waits, CBM/KG, cost and return time. GPS playback interpolates between scheduled coordinates, waits during restrictions/receiving/handling, and returns to that route's depot. Playback advances three modeled minutes per tick. It is not live tracking, a drivable-road guarantee or cold-chain temperature monitoring.
+The manifest is the numerical route record: sequence, products, receiving window, service start/finish, waits, CBM/KG, cost and return time. GPS playback interpolates along road geometry in road mode and between scheduled coordinates in approximate mode, waits during restrictions/receiving/handling, and returns to that route's depot. Playback advances three modeled minutes per tick. It is not live tracking, a drivable-road guarantee or cold-chain temperature monitoring.
 
 ## 14. Persistence, public references and hosting
 
@@ -237,4 +240,4 @@ Render's static-site configuration runs `npm ci && npm test && npm run build` an
 
 Rehearsal: open Network overview; select Pasig; explain one mixed basket and its two jobs; inspect A/B manifests; reduce the fleet to expose misses; restore; edit one receiving window or traffic factor; compare another distributor's unchanged master; finish with network totals and limitations. Export settings before experiments so your exact demo state can be restored.
 
-Evidence: 39 automated checks and production build passed at the latest code milestone. Server-rendering smoke passed; browser interaction/map visual QA and Render verification remain outstanding. [Verification record](verification.md) lists the limits. Do not describe the demo as live GPS, trained AI forecasting, legal truck-ban enforcement, proven optimization or verified savings.
+Evidence: 51 automated checks and production build passed at the latest code milestone. Server-rendering smoke passed; browser interaction/map visual QA and Render verification remain outstanding. [Verification record](verification.md) lists the limits. Do not describe the demo as live GPS, trained AI forecasting, legal truck-ban enforcement, proven optimization or verified savings.

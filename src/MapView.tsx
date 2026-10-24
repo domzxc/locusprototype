@@ -6,7 +6,7 @@ import { positionAt } from '../engine.js';
 import type { Order, Point, Route } from './types';
 import { COLORS } from './palette';
 
-export default function MapView({routes,unserved,selected,minute,depot,distributor}:{routes:Route[];unserved:Order[];selected:string;minute:number;depot:Point;distributor:string}) {
+export default function MapView({routes,unserved,selected,minute,depot,distributor,travelBasis}:{routes:Route[];unserved:Order[];selected:string;minute:number;depot:Point;distributor:string;travelBasis:'road'|'approximate'}) {
   const container=useRef<HTMLDivElement>(null), map=useRef<maplibregl.Map|null>(null);
   const [ready,setReady]=useState(false), [error,setError]=useState('');
   useEffect(()=>{
@@ -28,8 +28,8 @@ export default function MapView({routes,unserved,selected,minute,depot,distribut
     const features:Feature[]=[];
     routes.forEach((r,i)=>{
       const color=COLORS[i%COLORS.length], active=!selected||r.id===selected;
-      features.push({type:'Feature',properties:{kind:'route',color,opacity:active?.85:.14},geometry:{type:'LineString',coordinates:[[depot.lng,depot.lat],...r.stops.map(s=>[s.lng,s.lat]),[depot.lng,depot.lat]]}});
-      r.stops.forEach(s=>features.push({type:'Feature',properties:{kind:'stop',color,opacity:active?1:.3},geometry:{type:'Point',coordinates:[s.lng,s.lat]}}));
+      features.push({type:'Feature',properties:{kind:'route',color,opacity:active?.85:.14},geometry:{type:'LineString',coordinates:r.roadLegs?r.roadLegs.flatMap(l=>l.geometry):[[depot.lng,depot.lat],...r.stops.map(s=>[s.lng,s.lat]),[depot.lng,depot.lat]]}});
+      r.stops.forEach(s=>features.push({type:'Feature',properties:{kind:'stop',color,opacity:active?1:.3},geometry:{type:'Point',coordinates:[(s.roadPoint??s).lng,(s.roadPoint??s).lat]}}));
     });
     unserved.forEach(s=>features.push({type:'Feature',properties:{kind:'stop',color:'#d03434',opacity:1},geometry:{type:'Point',coordinates:[s.lng,s.lat]}}));
     const data:FeatureCollection={type:'FeatureCollection',features};
@@ -40,11 +40,12 @@ export default function MapView({routes,unserved,selected,minute,depot,distribut
       m.addLayer({id:'routes',type:'line',source:'plan',filter:['==','kind','route'],paint:{'line-color':['get','color'],'line-width':2.5,'line-opacity':['get','opacity'],'line-dasharray':[2,1]}});
       m.addLayer({id:'stops',type:'circle',source:'plan',filter:['==','kind','stop'],paint:{'circle-radius':5,'circle-color':['get','color'],'circle-opacity':['get','opacity'],'circle-stroke-color':'#fff','circle-stroke-width':1.5}});
     }
-  },[routes,unserved,selected,ready,depot]);
+    m.setPaintProperty('routes','line-dasharray',travelBasis==='road'?[1,0]:[2,1]);
+  },[routes,unserved,selected,ready,depot,travelBasis]);
   useEffect(()=>{
     const m=map.current;
     if(!m||!ready)return;
-    const points=[...routes.flatMap(r=>r.stops),...unserved];
+    const points=[...routes.flatMap(r=>r.stops),...unserved,...routes.flatMap(r=>r.roadLegs?.flatMap(l=>l.geometry.map(([lng,lat])=>({lng,lat})))??[])];
     if(!points.length){m.jumpTo({center:[depot.lng,depot.lat],zoom:12});return;}
     const bounds=new maplibregl.LngLatBounds([depot.lng,depot.lat],[depot.lng,depot.lat]);
     points.forEach(p=>bounds.extend([p.lng,p.lat]));
@@ -63,5 +64,5 @@ export default function MapView({routes,unserved,selected,minute,depot,distribut
     });
     return ()=>markers.forEach(marker=>marker.remove());
   },[routes,minute,selected,ready,depot,distributor]);
-  return <div className="map-wrap"><div ref={container} className="map" aria-label={`${distributor} delivery routes map`}/><div className="map-label"><span className="live-dot"/>{distributor.toUpperCase()} DISTRIBUTION CENTER</div><div className="map-note">Estimated connections · not road routing</div>{error&&<div className="map-error" role="status">{error}</div>}</div>;
+  return <div className="map-wrap"><div ref={container} className="map" aria-label={`${distributor} delivery routes map`}/><div className="map-label"><span className="live-dot"/>{distributor.toUpperCase()} DISTRIBUTION CENTER</div><div className="map-note">{travelBasis==='road'?<>Road geometry: <a href="https://project-osrm.org/" target="_blank" rel="noreferrer">OSRM</a> / <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">OpenStreetMap</a> - driving profile</>:'Approximate connections - not road routing'}</div>{error&&<div className="map-error" role="status">{error}</div>}</div>;
 }

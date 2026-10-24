@@ -5,7 +5,12 @@ export interface Retailer extends Point, ReceivingHours {
   id:string; name:string; address:string; city:string; distributor:string; zone:number;
   enabled:boolean; synthetic:true; notes?:string;
 }
+export interface CostRates {idleDaily:number;maintenanceKm:number;tollPerTour:number;overtimeHour:number;}
+export interface CostAssumptions {paidHours:number;spoilageRate:number;frozenBoxValue:number;marginPerBox:number[];A:CostRates;B:CostRates;}
+export interface CostBreakdown {transport:number;idle:number;maintenance:number;tolls:number;overtime:number;spoilage:number;lostMargin:number;operating:number;economicTotal:number;}
+export interface RoadLeg {km:number;minutes:number;geometry:number[][];}
 export interface Config {
+  costing:CostAssumptions;
   distributor?:string; depot?:Point; network?:Record<string,Config>;
   seed: number; orders: number; peak: number; speed: number; detour: number; traffic: number;
   start: number; end: number; loading: number; stopBase: number; reserve: number;
@@ -18,6 +23,6 @@ export interface Config {
 }
 export interface VehicleSpec { capacity: number; weight: number; km: number; fixed: number; }
 export interface Order extends Point {id:string; name:string; address?:string; zone:number; area:string; quantities:number[]; volume:number; weight:number; cold:boolean; open:number; close:number; service:number; receivingClosed?:boolean; reason?:string; parentId?:string; shipment?:'frozen'|'dry';}
-export interface Stop extends Order {arrival:number; finish:number; wait:number; legKm:number; banWait:number;}
-export interface Route {depot?:Point;id:string;type:VehicleType;stops:Stop[];volume:number;weight:number;km:number;banWait:number;depart:number;return:number;cost:number;}
-export interface Plan {routes:Route[];unserved:Order[];unassignedDeliveries:Order[];served:number;partial:number;deliveryTotal:number;deliveryAssigned:number;averageDrops:number;total:number;km:number;cost:number;util:number;onTime:number;coverage:number;fleet:{A:number;B:number};}
+export interface Stop extends Order {roadPoint?:Point&{metres:number};arrival:number; finish:number; wait:number; legKm:number; banWait:number;}
+export interface Route {roadLegs?:RoadLeg[];roadProvider?:string;depot?:Point;id:string;type:VehicleType;stops:Stop[];volume:number;weight:number;km:number;banWait:number;depart:number;return:number;cost:number;}
+export interface Plan {travelBasis:'road'|'approximate';costs:CostBreakdown;roadMeta?:{provider:string;validatedAt:string;maximumSnapMetres:number;method:string};routes:Route[];unserved:Order[];unassignedDeliveries:Order[];served:number;partial:number;deliveryTotal:number;deliveryAssigned:number;averageDrops:number;total:number;km:number;cost:number;util:number;onTime:number;coverage:number;fleet:{A:number;B:number};}

@@ -21,6 +21,8 @@ Panel review entry point. This describes the current implementation and why the 
 | Keep browser data portable on static hosting | The authorized scope is a frontend prototype without a backend | Browser localStorage plus validated settings/master import/export; Render static-site configuration | Each browser/origin has its own settings. GitHub hosts source; a live Render deployment has not been verified in this session |
 | Keep public references separate | Public store addresses do not establish supplier receiving hours or synthetic demand | Reference catalog is visible but excluded from dispatch and rejected as a master import | No real delivery customer relationship, verified receiving schedule or geocode is inferred |
 
+New road/cost extension: optional OSRM validation now replaces straight connections with road geometry and returned leg metrics, rechecking the existing sequence and exposing trimmed jobs. Operating estimates include editable idle, maintenance, toll and overtime assumptions; spoilage and unassigned margin are separate exposure. See [road/cost guide](road-routing-and-costs.md) for formulas and live smoke results. No truck-specific access or live traffic is claimed.
+
 ## Published code milestones
 
 | Commit | Published scope | Reviewer takeaway |
@@ -33,7 +35,7 @@ Panel review entry point. This describes the current implementation and why the 
 
 ## What the evidence supports
 
-The latest implementation has 39 passing automated checks and a successful TypeScript/Vite production build. A server-rendering smoke check covered the overview and all six settings/retailer views. Browser interactions, map/WebGL visual behavior and hosted Render smoke tests remain unverified. The known large MapLibre bundle warning remains documented.
+The latest implementation has 51 passing automated checks and a successful TypeScript/Vite production build. A server-rendering smoke check covered the overview and all six settings/retailer views. Browser interactions, map/WebGL visual behavior and hosted Render smoke tests remain unverified. The known large MapLibre bundle warning remains documented.
 
 These checks support the modeled invariants and reproducibility. They do not establish real-world fleet sufficiency, navigable roads, temperature compliance, actual delivery performance, regulatory compliance or cost savings.
 

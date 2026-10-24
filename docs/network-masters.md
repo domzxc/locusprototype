@@ -29,3 +29,6 @@ Automated checks cover migration, isolation, unique IDs, owned retailers, depot-
 Browser checklist: open each distributor; confirm map/depot/manifest locality; edit a local receiving window and traffic factor; apply; switch elsewhere and confirm unchanged values; return and confirm persistence; compare network totals; export/import all settings; reject wrong-region retailer files; test empty and overloaded fleets. Supported browser tools were unavailable for this session, so these interactions remain unverified.
 
 Export all settings before rollback. Revert the feature commit to restore the previous Pasig UI; the old app reads the mirrored Pasig fields but cannot expose the other five masters. Keep the exported network JSON to restore them with the expanded app.
+
+
+Optional road validation and cost extension: [road/cost guide](road-routing-and-costs.md). Each local dispatch can request OSRM road validation; overall Network overview remains an explicitly approximate baseline with recommended fleets. Each master now also stores editable operating allowances and risk/opportunity inputs.

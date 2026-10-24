@@ -1,3 +1,4 @@
+import { costDefaults, normalizeCosting, costBreakdown } from './costing.js';
 export const DEPOT = { lng: 121.0705, lat: 14.5764 };
 export const PRODUCTS = ['Toothpaste', 'Ice cream', 'Soap', 'Water purifier', 'Tea'];
 export const PRODUCT_VOLUME = [.035, .09, .05, .22, .04];
@@ -6,6 +7,7 @@ export const defaults = {
   seed: 42, orders: 100, peak: 1.6, speed: 22, detour: 1.35, traffic: 1.35,
   start: 360, end: 1080, loading: 25, stopBase: 5, reserve: 0.15,
   receivingHours: {},
+  costing: structuredClone(costDefaults),
   productCbm: [...PRODUCT_VOLUME], productKg: [...PRODUCT_WEIGHT],
   service: [1, 2, 1, 5, 1],
   loadService: [.2, .5, .2, 1, .2],
@@ -121,6 +123,9 @@ export function plan(orders,c,fleet) {
     }
   }
   const unassignedDeliveries=[...pending.values()].map(o=>({...o,reason:o.receivingClosed?'Retailer closed for receiving on this demo day':o.service>o.close-o.open?'Full handling cannot fit retailer receiving window':o.volume>c[o.cold?'A':'B'].capacity || o.weight>c[o.cold?'A':'B'].weight?'Order exceeds compatible vehicle capacity':'No feasible capacity / time-window / shift slot in this heuristic'}));
+  return summarizePlan(orders,c,fleet,routes,unassignedDeliveries);
+}
+export function summarizePlan(orders,c,fleet,routes,unassignedDeliveries) {
   const assigned=routes.flatMap(r=>r.stops);
   const assignedParents=new Set(assigned.map(o=>o.parentId));
   const missingByParent=new Map();
@@ -131,25 +136,35 @@ export function plan(orders,c,fleet) {
   const unserved=orders.filter(o=>missingByParent.has(o.id)).map(o=>({...o,reason:`${assignedParents.has(o.id)?'Partially planned: ':''}${missingByParent.get(o.id).map(d=>`${d.shipment}: ${d.reason}`).join('; ')}`}));
   const served=orders.length-unserved.length;
   const partial=unserved.filter(o=>assignedParents.has(o.id)).length;
-  return {routes,unserved,unassignedDeliveries,served,partial,deliveryTotal:deliveries.length,deliveryAssigned:assigned.length,averageDrops:routes.length?assigned.length/routes.length:0,total:orders.length,km:routes.reduce((s,r)=>s+r.km,0),cost:routes.reduce((s,r)=>s+r.cost,0),util:routes.length?routes.reduce((s,r)=>s+r.volume/c[r.type].capacity,0)/routes.length:0,onTime:assigned.length?assigned.filter(o=>o.finish<=o.close+1e-9).length/assigned.length:0,coverage:orders.length?served/orders.length:0,fleet};
+  return {travelBasis:'approximate',costs:costBreakdown(routes,unassignedDeliveries,c,fleet),routes,unserved,unassignedDeliveries,served,partial,deliveryTotal:splitOrders(orders,c).length,deliveryAssigned:assigned.length,averageDrops:routes.length?assigned.length/routes.length:0,total:orders.length,km:routes.reduce((s,r)=>s+r.km,0),cost:routes.reduce((s,r)=>s+r.cost,0),util:routes.length?routes.reduce((s,r)=>s+r.volume/c[r.type].capacity,0)/routes.length:0,onTime:assigned.length?assigned.filter(o=>o.finish<=o.close+1e-9).length/assigned.length:0,coverage:orders.length?served/orders.length:0,fleet};
+}
+function alongRoad(geometry,f) {
+  const lengths=geometry.slice(1).map((p,i)=>distance({lng:geometry[i][0],lat:geometry[i][1]},{lng:p[0],lat:p[1]}));
+  let remaining=Math.max(0,Math.min(1,f))*lengths.reduce((s,v)=>s+v,0);
+  for(let i=0;i<lengths.length;i++)if(remaining<=lengths[i]&&lengths[i]>0){const t=remaining/lengths[i];return {lng:geometry[i][0]+(geometry[i+1][0]-geometry[i][0])*t,lat:geometry[i][1]+(geometry[i+1][1]-geometry[i][1])*t};}else remaining-=lengths[i];
+  const last=geometry[geometry.length-1];return {lng:last[0],lat:last[1]};
 }
 export function positionAt(route, minute) {
   const depot=route.depot??DEPOT;
   let origin=depot, departure=route.depart;
-  for(const stop of route.stops) {
+  for(const [index,stop] of route.stops.entries()) {
+    const road=route.roadLegs?.[index];
     const leave=departure+stop.banWait, arrival=stop.arrival-stop.wait;
-    if(minute<leave) return {...origin,status:'Waiting / restriction'};
+    if(minute<leave) return {...(road?alongRoad(road.geometry,0):origin),status:'Waiting / restriction'};
     if(minute<arrival) {
       const f=Math.max(0,Math.min(1,(minute-leave)/(arrival-leave)));
+      if(road)return {...alongRoad(road.geometry,f),status:'In transit'};
       return {lng:origin.lng+(stop.lng-origin.lng)*f,lat:origin.lat+(stop.lat-origin.lat)*f,status:'In transit'};
     }
-    if(minute<stop.finish) return {lng:stop.lng,lat:stop.lat,status:minute<stop.arrival?'Waiting for window':'Handling delivery'};
+    if(minute<stop.finish) return {...(road?alongRoad(road.geometry,1):{lng:stop.lng,lat:stop.lat}),status:minute<stop.arrival?'Waiting for window':'Handling delivery'};
     origin=stop; departure=stop.finish;
   }
+  const road=route.roadLegs?.[route.stops.length];
   const returnWait=route.banWait-route.stops.reduce((s,o)=>s+o.banWait,0);
   const leave=departure+returnWait;
-  if(minute<leave) return {...origin,status:'Waiting / restriction'};
+  if(minute<leave) return {...(road?alongRoad(road.geometry,0):origin),status:'Waiting / restriction'};
   const f=route.return>leave?Math.max(0,Math.min(1,(minute-leave)/(route.return-leave))):1;
+  if(road)return {...alongRoad(road.geometry,f),status:minute>=route.return?'Returned to depot':'Returning'};
   return {lng:origin.lng+(depot.lng-origin.lng)*f,lat:origin.lat+(depot.lat-origin.lat)*f,status:minute>=route.return?'Returned to depot':'Returning'};
 }
 export const DISTRIBUTORS = [
@@ -211,5 +226,5 @@ export function validateConfig(c) {
       for(const r of local.retailers){if(ids.has(r.id))throw Error('Retailer IDs must be unique across the network.');ids.add(r.id);}
     }
   }
-  return {...c,receivingHours:c.receivingHours??{},productCbm:copy(c.productCbm??PRODUCT_VOLUME),productKg:copy(c.productKg??PRODUCT_WEIGHT),...(network?{network}: {})};
+  return {...c,costing:normalizeCosting(c.costing),receivingHours:c.receivingHours??{},productCbm:copy(c.productCbm??PRODUCT_VOLUME),productKg:copy(c.productKg??PRODUCT_WEIGHT),...(network?{network}: {})};
 }

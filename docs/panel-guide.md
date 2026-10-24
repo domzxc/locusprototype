@@ -41,7 +41,7 @@ Before rehearsing, load default settings in Data studio and apply. Restore them 
 
 **“Are the routes optimal?”** No. Greedy, window-aware sequencing offers speed and explainability. Assigned orders respect the modeled constraints, but a solver could find better distance, cost or coverage. Benchmark with a heterogeneous VRPTW solver before operational use.
 
-**“What does 100% window compliance mean?”** Only assigned delivery jobs are in that denominator. The routing engine rejects jobs that cannot finish inside the receiving window, so assigned jobs can have 100% modeled compliance while original-order coverage is lower. The default normal plan fully covers 93 of 100 parent orders and has seven incomplete orders, including one partial. Actual delivery performance is unknown until confirmations exist.
+**“What does 100% window compliance mean?”** Only assigned delivery jobs are in that denominator. The routing engine rejects jobs that cannot finish inside the receiving window, so assigned jobs can have 100% modeled compliance while original-order coverage is lower. The default approximate normal plan fully covers 93 of 100 parent orders and has seven incomplete orders, including one partial. Actual delivery performance is unknown until confirmations exist.
 
 **“Can you edit retailer receiving times?”** Yes. Retailer management has a searchable synthetic master with editable identity, location, one assigned distributor, opening/closing times, active/archive state and closed-day status. Update a profile in the editor, then apply the master to replan. Closed retailers and infeasible windows remain visible in exceptions. Public Metro Manila directory references are in a separate tab and are not assumed to provide supplier receiving times. The stress example is a declared scenario, not fabricated evidence of a real failure rate. Weekly calendars, lunch intervals and dock contention are future extensions.
 
@@ -70,3 +70,10 @@ Philippine-unit defence: "We plan against both CBM and KG because a load can rea
 
 
 **Why all six now?** The challenge required only one routed distributor; we expanded it to six independent synthetic masters to demonstrate regional visibility. Select Manila or Cavite, inspect different local traffic zones/retailers, edit a receiving window, and return to Network overview. Explain that 600 demo profiles are a sample; 50,000 is the stated retailer footprint and does not mean 50,000 daily orders. Production fleet sizing requires actual distributor demand and order frequency.
+
+
+## Updated road and cost defence
+
+**Does GPS prove the route is drivable?** No. Use road routes & recheck obtains OSRM driving-profile geometry, road-leg distances and base durations, then checks the existing sequence against modeled traffic factors, full receiving windows and shift return. GPS follows that road geometry but remains simulated. Truck dimensions, legal access, closures and retailer entrances need verification. Approximate mode remains clearly labeled. More realistic road times may reduce coverage; show exceptions rather than claiming a perfect plan.
+
+**What does the cost now include?** The operating estimate includes base transport, idle ownership/lease, additional maintenance, a flat toll allowance and assumed crew overtime beyond paid hours. Expected spoilage and unassigned contribution margin are separate scenario exposure, not confirmed expenses. Rates are editable assumptions, not actual invoices or statutory wage calculations. Set extras to zero if already included in base rates. Tax, financing/insurance detail and seasonal procurement pricing are not separately modeled. See [road/cost guide](road-routing-and-costs.md) for the worked example.

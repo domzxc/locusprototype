@@ -70,5 +70,5 @@ export function networkPlans(root,scenario='normal') {
 export function summarizeNetwork(runs) {
   const sum=f=>runs.reduce((s,r)=>s+f(r),0);
   const total=sum(r=>r.result.total),served=sum(r=>r.result.served),vehicles=sum(r=>r.result.routes.length),assigned=sum(r=>r.result.deliveryAssigned);
-  return {total,served,vehicles,assigned,allocated:sum(r=>r.fleet.A+r.fleet.B),km:sum(r=>r.result.km),cost:sum(r=>r.result.cost),coverage:total?served/total:0,averageDrops:vehicles?assigned/vehicles:0,util:vehicles?sum(r=>r.result.util*r.result.routes.length)/vehicles:0};
+  return {operatingCost:sum(r=>r.result.costs.operating),riskExposure:sum(r=>r.result.costs.spoilage+r.result.costs.lostMargin),economicTotal:sum(r=>r.result.costs.economicTotal),total,served,vehicles,assigned,allocated:sum(r=>r.fleet.A+r.fleet.B),km:sum(r=>r.result.km),cost:sum(r=>r.result.cost),coverage:total?served/total:0,averageDrops:vehicles?assigned/vehicles:0,util:vehicles?sum(r=>r.result.util*r.result.routes.length)/vehicles:0};
 }

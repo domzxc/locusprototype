@@ -5,7 +5,7 @@ RISK: medium
 
 ## Summary
 
-Expanded the browser-only prototype to six independent distributor dispatch/master-data workspaces and an overall sample-day network summary. Existing Pasig edits migrate intact, with globally unique retailer IDs, per-distributor depots/traffic/receiving schedules/operating inputs and validated full-network import/export. Automated and server-rendering checks pass. Browser interaction, WebGL/map visual QA and Render smoke verification remain outstanding; earlier GitHub publication is recorded below.
+Added optional OSRM road validation to the six-distributor browser prototype: road geometry, schedule/distance recalculation, conservative stop trimming, road-following simulated GPS, cancellation, caching and labeled approximate fallback. Added editable operating allowances and separate risk/opportunity exposure, with cost breakdowns and updated panel notes. The user request extends the earlier frontend-only scope to an external public routing service; no backend or API key was added. All 51 automated checks and production build pass; live road smoke checks and SSR checks pass. Browser events/WebGL and Render deployment remain unverified.
 
 ## Files changed
 
@@ -14,13 +14,15 @@ Expanded the browser-only prototype to six independent distributor dispatch/mast
 | src/App.tsx | Navigation, dispatch, manifests, order book, fleet overrides, allocation view, panel guide, local persistence and import/export |
 | src/MapView.tsx | MapLibre raster basemap, colored routes, unassigned markers, depot and scheduled simulated positions |
 | src/Settings.tsx | Scoped logistics form, local depot/zone coordinates, CBM/KG packaging and PHT clocks |
+| road-routing.js, road-routing.d.ts, src/useRoadPlan.ts | Public OSRM client/parser, rate spacing/cache, atomic fixed-sequence road validation and stale-request protection |
+| costing.js, costing.d.ts, src/CostSummary.tsx | Editable assumptions, operating/risk components and breakdown UI |
 | network.js, network.d.ts, src/NetworkOverview.tsx | Six-master migration, atomic settings import, local configuration updates, ID allocation and sample-day totals/UI |
 | src/styles.css, src/palette.ts | Responsive interface and route colors |
 | src/types.ts, engine.d.ts | Product loading configuration and typed engine boundary |
 | engine.js | Peak case accounting, separate frozen/dry jobs, parent-order completion, receiving-hour validation/enforcement, regional sizing proxy and modeled GPS |
 | src/RetailerManagement.tsx | Synthetic profile CRUD/archive, receiving schedules, validated import/export and separate public-reference catalog; replaces RetailerHours.tsx |
 | src/data/metro-manila-retailer-references.json | Ten source-attributed public address references; receiving windows and verified coordinates deliberately null |
-| tests/planning.test.mjs, tests/retailers.test.mjs, tests/ph-conventions.test.mjs, tests/network.test.mjs | Thirty-nine meaningful planning, KPI, master-data and provenance-boundary tests |
+| tests/planning.test.mjs, tests/retailers.test.mjs, tests/ph-conventions.test.mjs, tests/network.test.mjs, tests/road-cost.test.mjs | Fifty-one meaningful planning, KPI, master-data and provenance-boundary tests |
 | .gitignore | Exclude environment variants and local tool/settings directories |
 | README.md, docs | Usage, approach equations, baseline results, panel defence, deployment and this record |
 
@@ -28,7 +30,7 @@ Expanded the browser-only prototype to six independent distributor dispatch/mast
 
 | Command | Outcome |
 |---|---|
-| npm test | 39 tests passed, zero failures, including six-distributor migration/isolation, local depot routes/GPS, normal/peak constraints, aggregate arithmetic, scoped imports and empty masters |
+| npm test | 51 tests passed, zero failures, including road schedules/geometry/GPS bends, trim conservation, cancellation/failure, partial-parent margin, cost arithmetic and migration |
 | npm run build | TypeScript passed; Vite production build succeeded. Known large MapLibre chunk warning |
 | Vite SSR + renderToString smoke | Overview and all six local settings/retailer views rendered with expected local zone/profile content; not a browser interaction test |
 | node --input-type=module baseline calculation | Normal 2 A + 6 B, 8 used, 93 fully planned parent orders, 1 partial, 118/125 jobs, 164.921 km, PHP 14,892.953; peak 3 A + 10 B, 12 used, 100 fully planned, 125/125 jobs, 184.970 km, PHP 20,736.425 |
@@ -120,3 +122,10 @@ Server rendering smoke: Vite SSR loader plus React renderToString successfully r
 
 
 Panel documentation alignment (24 October 2026): added core-changes.md with decision rationale and published milestone links; prototype-review-notes.md documents each module, equations, worked CBM/KG/handling/travel/allocation examples, KPI denominators and default results. README now provides the panel entry point, clearly states sample-size/history/segregation boundaries and links the notes. Corrected remaining approach-table case labels to box units and clarified that allocation consumes serviceable demand before routing. Documentation-only update: no application behavior or dependencies changed. Numerical examples and default totals were recomputed directly from the engine; relative documentation links and report structure were checked. Production build evidence remains from the preceding implementation milestone; browser and Render verification gaps are unchanged. Rollback for this update is a normal revert of the documentation commit.
+
+
+Road routing and costs (24 October 2026): test-first import failed while the road/cost modules were absent; extracting summarizePlan then exposed an out-of-scope deliveries variable, fixed by deriving the job total from splitOrders. All legacy invariants remain unchanged. Added 12 new tests (51 total), including distance-weighted interpolation through a road bend, road-leg schedule/capacity/return invariants, conservative trimming and conservation, partial parent coverage/unassigned-only margin, early and mid-request cancellation, malformed responses, one-kilometre snap boundary, caching/HTTP failure, overtime/idle/risk arithmetic and backward-compatible cost defaults. Extra costs are evaluated, not optimized. The legacy cost field remains base transport.
+
+Live service evidence: an identified CLI request to OSRM returned Ok, road geometry and Access-Control-Allow-Origin: *. Three-order Pasig road validation served 3/3, 16.2055 KM, 601 geometry points, maximum snap 89.72 m. A single fresh 100-order validation used eight vehicles, assigned 109/125 jobs and fully planned 84/100 parents over 226.2598 KM; operating estimate PHP 17,937.3984, risk/opportunity PHP 14,102, combined PHP 32,039.3984, maximum snap 185.89 m. These are observations, not stable live benchmarks or actual execution results. Requests were sequential and rate-spaced; no road matrix/bulk service was queried.
+
+SSR smoke passed for Network overview, all six costing forms and cost breakdowns, checking expected labels and absence of NaN. Browser inventory still reported no enabled apps/browsers. Production build passes with the known MapLibre chunk warning. Reviewed the requested map/cost scope first, then request cancellation/atomicity, coordinate-only transmission, stale response handling, no-silent-fallback labels, cost boundaries/double counting and export provenance. Public driving-profile routes do not verify truck access or live traffic. Network overview remains labeled as the approximate baseline. docs/road-routing-and-costs.md provides formulas, provider docs, workflow and rollback. Browser event/WebGL visual QA, hosted CORS and Render smoke testing remain outstanding. Rollback: export settings and revert this feature commit; no data service migration is required.

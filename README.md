@@ -1,6 +1,6 @@
 # DomTransport · Manila dispatch lab
 
-A browser-only FMCG fleet allocation and daily dispatch prototype. React, TypeScript, Vite and MapLibre; no backend, credentials or runtime AI service. Dispatch demand, retailer profiles, locations and GPS positions are synthetic. A separate public reference catalog lists sourced branch names/addresses and is excluded from dispatch. Routes are heuristic sequences with estimated connections, not road directions or proven optimal solutions.
+A browser-only FMCG fleet allocation and daily dispatch prototype. React, TypeScript, Vite and MapLibre; no backend, credentials or runtime AI service. Dispatch demand, retailer profiles, locations and GPS positions are synthetic. A separate public reference catalog lists sourced branch names/addresses and is excluded from dispatch. Routes use heuristic sequences with an approximate baseline and optional OSRM road validation. They are not proven optimal or verified for truck access.
 
 ## Start here: panel review
 
@@ -12,6 +12,7 @@ The decision this prototype supports is **how much refrigerated and dry capacity
 | [Module-by-module review notes](docs/prototype-review-notes.md) | Calculation walkthroughs, worked examples, source links, baseline results and answers to rehearse |
 | [Approach and mathematical models](docs/approach-draft.md) | Implemented heuristic, proposed production optimization, assumptions and demand-review triggers |
 | [Presentation script](docs/panel-guide.md) | The 30-minute panel narrative and demo sequence |
+| [Road routes and cost estimates](docs/road-routing-and-costs.md) | Road-validation workflow, cost inputs/formulas and observed live-service examples |
 | [Verification record](docs/verification.md) | Automated evidence and browser/hosting verification gaps |
 
 **Scope and interpretation:** the brief describes about 50,000 mapped retailers and requests roughly 100 synthetic orders for one distributor. The prototype began with Pasig, then expanded to six independent distributor samples, initially 600 profiles in total. The fleet figures size those sample days; actual regional fleet requirements need historical demand and local calibration. No five-year order history was supplied or used to train a forecast.
@@ -41,9 +42,9 @@ The Vite build in `dist` is the deployment artifact. Node 24 is selected for Ren
 ## What to explore
 
 - **Network overview:** combined results and a six-distributor comparison, with normal/peak scenarios and network plan export. Starts with 100 synthetic profiles per distributor (600 total), preserving saved Pasig data.
-- **Dispatch planner:** select any of the six distributors; 100 seeded orders each by default, five SKUs, cold-only compatibility, volume and weight capacity, full-service windows, shift return and an illustrative truck restriction. Normal/peak scenarios; fleet overrides reveal unassigned orders. Select a vehicle, inspect its manifest and scrub or play modeled GPS.
+- **Dispatch planner:** select any of the six distributors; 100 seeded orders each by default, five SKUs, cold-only compatibility, volume and weight capacity, full-service windows, shift return and an illustrative truck restriction. Normal/peak scenarios; fleet overrides reveal unassigned orders. Select a vehicle, inspect its manifest and scrub or play modeled GPS. Use road routes & recheck requests OSRM road geometry and revalidates the sequence; progress, cancellation and explicit approximate fallback are available.
 - **Fleet allocation:** normal and peak Type A/B counts for each independent synthetic sample. The assumed 50,000 mapped-retailer footprint is displayed separately; these sample fleet counts are not a full-scale recommendation.
-- **Data studio:** traffic by zone, speed and detour, per-product loading/unloading time, vehicle payload/cost, shift, demand and a vehicle-type restriction. Apply validates and recalculates. Import/export settings for portability.
+- **Data studio:** traffic by zone, speed and detour, per-product loading/unloading time, vehicle payload/cost, extended operating/risk costs, shift, demand and a vehicle-type restriction. Apply validates and recalculates. Import/export settings for portability.
 - **Retailer management:** add/edit synthetic profiles, addresses, local distributor ownership, coordinates, receiving windows and closed-day status; archive/restore; search and JSON import/export. A separate tab provides ten source-linked Metro Manila public reference records, with unknown receiving hours and coordinates left empty.
 - **Panel guide:** demo timing, model rationale, tradeoffs and Q&A.
 
@@ -70,9 +71,9 @@ Settings and retailer receiving hours remain usable on Render. They are JSON-ser
 
 ## Important limits
 
-Synthetic case sizes, traffic and costs need calibration. Travel is haversine distance × detour factor at an adjusted speed. MapLibre draws straight connections; simulated GPS follows that modeled schedule. Basemap tiles come from OpenStreetMap and fonts from Google Fonts, requiring internet; failures do not change the planning engine. No geocoding, live traffic, legal truck-ban validation, temperature telemetry, splitting a frozen/dry job across vehicles, multi-trip dispatch, driver breaks or real forecasting is implemented.
+Synthetic packaging, traffic and costs need calibration. Approximate mode uses haversine distance and detour. Optional OSRM mode draws road geometry, uses returned leg distances/durations with traffic multipliers, and rechecks receiving/shift feasibility. GPS remains simulated and the driving profile does not verify truck access. Basemap, fonts and routing require internet. No live traffic, legal truck-ban geography, temperature telemetry, multi-trip dispatch, driver breaks or trained forecasting is implemented.
 
-The daily cost includes fixed charges only for used vehicles plus per-km costs. Idle ownership costs are excluded. Allocation is a workload sizing heuristic; daily routing is greedy and may miss a feasible solution. Always examine full parent-order coverage and partial assignments alongside assigned-delivery window compliance.
+The operating estimate adds idle ownership/lease, maintenance, toll allowances and overtime to base transport. Spoilage and unassigned contribution margin are separate risk/opportunity estimates. All extra rates are editable assumptions; set them to zero if included in base costs. Read [road routing and costs](docs/road-routing-and-costs.md) for formulas, examples and exclusions. Allocation remains workload sizing and sequencing remains greedy; inspect coverage and exceptions as well as cost.
 
 
 ## Philippine logistics units and schedules

@@ -14,6 +14,7 @@ export function allocate(orders:Order[],c:Config):{A:number;B:number};
 export function plan(orders:Order[],c:Config,fleet:{A:number;B:number}):Plan;
 export function travel(a:Point,b:Point & {zone?:number},depart:number,type:VehicleType,c:Config):{km:number;arrival:number;leave:number;wait:number};
 export function validateConfig(c:unknown):Config;
+export function summarizePlan(orders:Order[],c:Config,fleet:{A:number;B:number},routes:Route[],unassigned:Order[]):Plan;
 export function positionAt(route:Route,minute:number):Point & {status:string};
 export const DISTRIBUTORS: {name:string;retailers:number}[];
 export function regionalAllocation(c:Config):{name:string;retailers:number;daily:number;normal:{A:number;B:number};peak:{A:number;B:number}}[];

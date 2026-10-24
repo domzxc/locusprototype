@@ -2,7 +2,7 @@
 
 **Review draft · updated 24 October 2026 · synthetic data only**
 
-Related: [core changes and reasoning](core-changes.md), [module calculations and rehearsal notes](prototype-review-notes.md).
+Related: [road routing and extended costs](road-routing-and-costs.md), [core changes and reasoning](core-changes.md), [module calculations and rehearsal notes](prototype-review-notes.md).
 
 ## 1. Leadership recommendation
 
@@ -129,11 +129,11 @@ The heuristic is deterministic for a fixed seed/configuration, indivisible froze
 - Planned window compliance = assigned delivery jobs whose full handling fits their window / assigned jobs. Because feasibility is enforced, this usually equals 100%; it must be paired with order coverage. This is the interface's on-time planning measure, not actual delivery performance. Actual on-time rate cannot be measured without delivery confirmations.
 - Volume utilization = mean(route volume / vehicle volume limit) across **used** vehicles. The manifest also shows weight payload and capacity; volume utilization alone can understate weight or time pressure.
 - Average drops per truck = assigned delivery stops / used vehicles, displayed to one decimal place. Frozen and dry portions delivered separately to the same retailer count as two drops. Depot departure/return, unassigned jobs and idle vehicles are excluded. Zero used vehicles produces zero. This is planned stop productivity, not proof of actual deliveries or distinct retailers reached. The normal default is 118 / 8 = 14.75, displayed as 14.8.
-- Distance includes estimated depot return legs. Travel is straight-line distance adjusted by detour, not navigable road distance.
-- Cost = used-vehicle daily fixed charge + estimated km × per-km charge. Idle ownership, tolls, overtime, separate spoilage and lost-sales costs are excluded.
-- GPS is interpolated simulation along planned connections. It respects modeled waits and returns; it is not a telemetry feed.
+- Distance includes depot returns. Approximate mode uses detoured haversine distance; optional road validation uses OSRM road-leg distance and rechecks schedules. Road validation trims an existing sequence and does not optimize it.
+- Base transport cost = used-vehicle daily charge + route KM times base running rate. The operating KPI now also includes editable idle ownership, maintenance, toll allowance and overtime. Expected spoilage and unassigned contribution margin are separate risk/opportunity exposure. See road-routing-and-costs.md for exact formulas and assumed rates.
+- GPS is simulated along road geometry in road mode and straight connections in approximate mode. It respects modeled waits and returns; it is not a telemetry feed.
 
-For the Pasig distributor at seed 42 and initial defaults, observed engine results:
+For the Pasig distributor at seed 42 in approximate mode, observed baseline results below show base transport only; the current operating KPI adds allowances:
 
 | Scenario | Allocated A/B | Used | Served | Mean volume utilization | Estimated km | Modeled cost |
 |---|---|---:|---:|---:|---:|---:|
