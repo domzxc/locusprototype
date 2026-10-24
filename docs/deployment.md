@@ -23,13 +23,13 @@ Navigation is component state on one URL, so no nested SPA paths or fallback rew
 
 ## Will the JSON settings still work?
 
-Yes. The application has browser-local JSON settings, not a shared JSON database on the server. Receiving-hour edits, traffic, costs and other applied assumptions are stored in localStorage and can be exported as version-2 domtransport-settings JSON (all six masters); legacy version-1 imports remain supported. Synthetic orders and dispatch plans are regenerated from that configuration and the seed. Version-2 plan exports are review snapshots, not settings imports.
+Yes. The application has browser-local JSON settings, not a shared JSON database on the server. Receiving-hour edits, traffic, costs and other applied assumptions are stored in localStorage and can be exported as a full settings CSV backup (all six masters); legacy version-1/version-2 JSON imports remain supported. Synthetic orders and dispatch plans are regenerated from that configuration and the seed. Plan exports are CSV review reports, not settings imports. See [CSV formats](csv-and-network-filter.md).
 
 Localhost and Render are different browser origins: export settings from localhost and import the file in Data studio at the live Render URL. They do not transfer automatically. Reloading or redeploying at the same hostname normally keeps localStorage. A different device, browser, private session, cleared site data or new hostname uses separate storage. Different users do not see each other's changes. A shared database would need a separate backend/data service and is outside the current prototype scope.
 
 ## Deployment smoke test
 
-Open the hosted site in a fresh browser. Verify default 100-order plan, normal/peak switch, map tiles and attribution, vehicle manifest, GPS playback, insufficient-fleet exceptions, settings Apply and JSON export/import. Reload and confirm applied settings persist locally. Test a narrow screen and keyboard focus. Check browser console/network errors and compare the exported default plan with test evidence. Basemap and font resources need internet access.
+Open the hosted site in a fresh browser. Verify default 100-order plan, normal/peak switch, map tiles and attribution, vehicle manifest, GPS playback, insufficient-fleet exceptions, settings Apply and CSV export/import. Reload and confirm applied settings persist locally. Test a narrow screen and keyboard focus. Check browser console/network errors and compare the exported default plan with test evidence. Basemap and font resources need internet access.
 
 ## Release / rollback
 

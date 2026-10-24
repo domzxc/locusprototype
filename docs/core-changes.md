@@ -73,3 +73,7 @@ The current UI calls deliveries excluded from the plan **Unserved (planned)**; p
 Road exceptions now identify the failed receiving close, service shift deadline, depot-return deadline or search limit, with attempted PHT times. Approximate exceptions distinguish capacity, no trucks, absent crew and final-tour append checks. Reasons describe attempts, not proof that no alternative route could work. See [precise unserved reasons](unserved-diagnostics.md).
 
 **Panel response to trucks back at 3 PM:** ?That is the end of the current single loaded tour, not proof all orders were delivered. The prototype does not reload trucks or retry removed road stops. We inspect failed timings, initial-tour CBM/KG, crew and possible resequencing before concluding we need more trucks. We show early returns and unused shift time explicitly. Actual delivery confirmation is outside this simulation.?
+
+## Network filtering and spreadsheet exports
+
+The previously disabled All selector is now an active All/six-depot filter. Overview KPIs, normal/peak baseline, attendance, comparisons, risk and both exports follow the same selection. All export/download actions now produce CSV. Settings and retailer CSVs round-trip through validated imports; old JSON backups are still accepted. Network/dispatch/allocation CSVs are review reports, not configuration imports. See [CSV formats](csv-and-network-filter.md) for row types, PHT units and avoiding double-counting summary/vehicle rows.

@@ -86,3 +86,10 @@ Replaced route-colored order dots with shape/color status icons and a live-count
 - Enlarged main text, table values, settings fields, notes, map labels/popups, navigation and headings using rem units that respect browser font preferences.
 - Darkened secondary text and provided more space through wider panels, larger controls, table spacing and responsive wrapping/scrolling.
 - Preserved planning calculations and browser data. Existing 96 tests pass; production build passes with the known MapLibre chunk warning. Visual browser verification remains pending.
+
+## 24 October 2026: functional network scope and CSV downloads
+
+- Enabled All and six depot selections, filtering overview totals, attendance, normal/peak comparisons, risk and both network exports consistently.
+- Converted every export to CSV: network, dispatch, allocation, settings backup, retailer editor master and public references. Added CSV import for settings/retailers while retaining legacy JSON import.
+- Preserved separate frozen/dry jobs, unserved reasons and PHT/CBM/KG/PHP columns. See [CSV formats and filtering](csv-and-network-filter.md).
+- All 103 tests and TypeScript/Vite build pass; existing MapLibre chunk warning remains. Browser download/click and hosted verification pending.

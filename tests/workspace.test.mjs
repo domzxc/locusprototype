@@ -11,12 +11,31 @@ test('Network overview declares All as its scope instead of showing the active P
     const html=renderToString(createElement(App));
     const scope=html.match(/<select aria-label="Network scope"[^>]*>.*?<\/select>/)?.[0];
     assert.ok(scope,'network scope selector is rendered');
-    assert.match(scope,/disabled/);
+    assert.ok(!scope.includes('disabled'));
     assert.match(scope,/<option[^>]*selected=""[^>]*>All<\/option>/);
-    assert.ok(!scope.includes('Pasig'));
+    for(const name of ['Quezon City','Manila City','Makati','Pasig','Bulacan','Cavite'])assert.ok(scope.includes(name));
     assert.ok(html.includes('DRIVER &amp; HELPER ATTENDANCE'));
     assert.ok(html.includes('Manage attendance'));
   }finally{await server.close();}
+});
+
+test('network scope renders only the chosen depot with matching totals and baseline attendance',async()=>{
+ const {initializeNetwork,networkPlans,summarizeNetwork}=await import('../network.js');
+ const {copy,defaults}=await import('../engine.js');
+ const root=initializeNetwork(copy(defaults)),runs=networkPlans(root,'peak','proposed'),normal=networkPlans(root);
+ const server=await createServer({server:{middlewareMode:true,hmr:false},appType:'custom'});
+ try{
+  const {default:Overview}=await server.ssrLoadModule('/src/NetworkOverview.tsx');
+  for(const run of runs){
+   const html=renderToString(createElement(Overview,{root,scope:run.name,scenario:'peak',resourceMode:'proposed',onScenario:()=>{},onOpen:()=>{},onOpenAttendance:()=>{}})).replace(/<!--[\s\S]*?-->/g,'');
+   const body=html.match(/<tbody>([\s\S]*?)<\/tbody>/)?.[1]??'';
+   assert.equal((body.match(/<tr>/g)??[]).length,1);assert.ok(body.includes(`<strong>${run.name}</strong>`));
+   assert.ok(html.includes(`${run.name} delivery performance`));
+   assert.ok(html.includes(`${run.result.total} peak orders versus ${normal.find(n=>n.name===run.name).result.total} normal orders`));
+   const t=summarizeNetwork([run]);assert.ok(html.includes(`${t.served}/${t.total} complete orders`));
+   assert.ok(html.includes('Export network plan CSV'));
+  }
+ }finally{await server.close();}
 });
 
 

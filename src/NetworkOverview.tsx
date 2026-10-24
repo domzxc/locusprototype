@@ -1,28 +1,25 @@
+import {downloadCsv,toCsv,networkRows,selectNetworkRuns} from '../csv-exports.js';
 import PeakResourceControl from './PeakResourceControl';
 import type {ResourceMode} from '../scenarios.js';
 import {formatPHTime} from './ph-conventions.js';
 import { useMemo } from 'react';
 import { networkPlans, summarizeNetwork } from '../network.js';
-import { PH_UNITS } from './ph-conventions.js';
 import type { Config } from './types';
 
 const money=(n:number)=>new Intl.NumberFormat('en-PH',{style:'currency',currency:'PHP',maximumFractionDigits:0}).format(n);
-export default function NetworkOverview({root,scenario,onScenario,onOpen,onOpenAttendance,resourceMode='proposed',onResourceMode}:{root:Config;scenario:string;onScenario:(value:string)=>void;onOpen:(name:string)=>void;onOpenAttendance:()=>void;resourceMode?:ResourceMode;onResourceMode?:(mode:ResourceMode)=>void}) {
-  const runs=useMemo(()=>networkPlans(root,scenario,resourceMode),[root,scenario,resourceMode]);
+export default function NetworkOverview({root,scenario,onScenario,onOpen,onOpenAttendance,resourceMode='proposed',onResourceMode,scope='All'}:{root:Config;scope?:string;scenario:string;onScenario:(value:string)=>void;onOpen:(name:string)=>void;onOpenAttendance:()=>void;resourceMode?:ResourceMode;onResourceMode?:(mode:ResourceMode)=>void}) {
+  const allRuns=useMemo(()=>networkPlans(root,scenario,resourceMode),[root,scenario,resourceMode]);
+  const runs=useMemo(()=>selectNetworkRuns(allRuns,scope),[allRuns,scope]);
   const total=useMemo(()=>summarizeNetwork(runs),[runs]);
-  const normalRuns=useMemo(()=>networkPlans(root),[root]),normal=useMemo(()=>summarizeNetwork(normalRuns),[normalRuns]);
+  const normalRuns=useMemo(()=>selectNetworkRuns(networkPlans(root),scope),[root,scope]),normal=useMemo(()=>summarizeNetwork(normalRuns),[normalRuns]);
   const proposed=scenario==='peak'&&resourceMode==='proposed';
-  function exportNetwork(){
-    const value={kind:'domtransport-network-plan',version:1,synthetic:true,units:PH_UNITS,scenario,resourceMode:proposed?'proposed':'current',totals:total,distributors:runs,limitations:'Independent synthetic sample days; no cross-depot pooling, live traffic or proven optimisation. Not a full-network fleet recommendation.'};
-    const url=URL.createObjectURL(new Blob([JSON.stringify(value,null,2)],{type:'application/json'})),link=document.createElement('a');
-    link.href=url;link.download='domtransport-network-plan.json';link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
-  }
+  function exportNetwork(){downloadCsv('domtransport-network-plan.csv',toCsv(networkRows(runs,scenario,resourceMode,normalRuns)));}
   return <>
-    <div className="planning-toolbar"><div><h2>Overall delivery performance</h2><p>Six independent depot plans. Peak proposed resources are hypothetical seasonal additions; saved inventory and attendance stay unchanged.</p></div><div className="scenario-control"><button className={scenario==='normal'?'selected':''} onClick={()=>onScenario('normal')}>Normal day</button><button className={scenario==='peak'?'selected':''} onClick={()=>onScenario('peak')}>Peak season</button></div><button onClick={exportNetwork}>Export network plan</button></div>
+    <div className="planning-toolbar"><div><h2>{scope==='All'?'Overall delivery performance':`${scope} delivery performance`}</h2><p>Scope: {scope==='All'?'all six distributors':scope}. Peak proposed resources are hypothetical seasonal additions; saved inventory and attendance stay unchanged.</p></div><div className="scenario-control"><button className={scenario==='normal'?'selected':''} onClick={()=>onScenario('normal')}>Normal day</button><button className={scenario==='peak'?'selected':''} onClick={()=>onScenario('peak')}>Peak season</button></div><button onClick={exportNetwork}>Export network plan CSV</button></div>
     <div className="notice">The business footprint is approximately 50,000 mapped retailers. This demo starts with 100 synthetic retailer profiles per distributor (600 total), or preserves your existing Pasig sample. These are sample-day plans, not 50,000 daily orders or a validated full-scale fleet. All depot locations, traffic and receiving schedules are illustrative.</div>
     {scenario==='peak'&&<section className="card prose"><PeakResourceControl mode={resourceMode} onChange={mode=>onResourceMode?.(mode)}/><p><strong>{total.total} peak orders versus {normal.total} normal orders.</strong> Peak also increases boxes per order and extends vehicle shift limits. Store receiving windows remain unchanged. Extra transactions may repeat at the same assigned store; more orders does not necessarily mean more retailers. {proposed?`Proposed additions: ${total.additionalVehicles} trucks, ${total.temporaryDrivers} temporary drivers and ${total.temporaryHelpers} temporary helpers. These are assumed available for this comparison, not confirmed hires.`:'This view uses saved trucks and attendance. Lower route spending may reflect unassigned deliveries; it is not evidence that peak demand is cheaper to serve.'}</p><p>Change peak assumptions per depot in Data studio. Extra working hours are an allowance; overtime cost uses actual modeled route duty, not the whole shift automatically. Proposed trucks use configured daily rates; temporary staff wages and rental premiums need a separate budget.</p></section>}
     <div className="kpi-grid network-kpis">
-      <section className="card metric"><div className="metric-label">{proposed?'VEHICLES USED / PROPOSED':'VEHICLES USED / CURRENT'}</div><div className="metric-value">{total.vehicles}<span> / {total.allocated}</span></div><p>{proposed?'Saved fleet plus assumed seasonal trucks':'Physical trucks across six depots'}</p></section>
+      <section className="card metric"><div className="metric-label">{proposed?'VEHICLES USED / PROPOSED':'VEHICLES USED / CURRENT'}</div><div className="metric-value">{total.vehicles}<span> / {total.allocated}</span></div><p>{proposed?'Saved fleet plus assumed seasonal trucks':`Physical trucks in ${scope==='All'?'all six depots':scope}`}</p></section>
       <section className="card metric"><div className="metric-label">SAVED DRIVER &amp; HELPER ATTENDANCE</div><div className="metric-value">{normal.driversPresent}<span> / {normal.driversScheduled} drivers</span></div><p>{normal.helpersPresent} / {normal.helpersScheduled} helpers present. Absent: {normal.driversScheduled-normal.driversPresent} drivers, {normal.helpersScheduled-normal.helpersPresent} helpers. Scenario fleet: {total.crewReady} trucks crew-ready, {total.crewBlocked} blocked by crew shortages.</p><button onClick={()=>onOpenAttendance()}>Manage attendance</button></section>
       <section className="card metric"><div className="metric-label">PLANNED ORDER COVERAGE</div><div className="metric-value">{Math.round(total.coverage*100)}%</div><p>{total.served}/{total.total} complete orders</p></section>
       <section className="card metric"><div className="metric-label">AVG. DROPS / USED TRUCK</div><div className="metric-value">{total.averageDrops.toFixed(1)}</div><p>Assigned frozen/dry jobs / used vehicles; repeat orders can share a store</p></section>

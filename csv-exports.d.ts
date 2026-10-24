@@ -1,0 +1,15 @@
+import type {Config,Retailer,Plan,Order} from './src/types';
+import type {DistributorRun} from './network';
+import {regionalAllocation} from './engine';
+export type CsvRow=Record<string,string|number|boolean|null|undefined>;
+export function toCsv(rows:CsvRow[],columns?:string[]):string;
+export function parseCsv(text:string):Record<string,string>[];
+export function downloadCsv(name:string,content:string):void;
+export function settingsCsv(config:Config):string;
+export function readSettingsCsv(text:string):unknown;
+export function retailersCsv(retailers:Retailer[],distributor:string):string;
+export function readRetailersCsv(text:string):unknown;
+export function selectNetworkRuns(runs:DistributorRun[],scope?:string):DistributorRun[];
+export function networkRows(runs:DistributorRun[],scenario:string,resourceMode:string,baselineRuns?:DistributorRun[]):CsvRow[];
+export function allocationRows(regional:ReturnType<typeof regionalAllocation>):CsvRow[];
+export function dispatchRows(orders:Order[],plan:Plan,c:Config,scenario:string,resourceMode:string):CsvRow[];

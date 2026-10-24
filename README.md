@@ -54,7 +54,7 @@ The Vite build in `dist` is the deployment artifact. Node 24 is selected for Ren
 
 The dedicated Retailer management page now handles receiving schedules previously shown in Data studio. Apply the master to recalculate routes, or load the labeled receiving-hours stress example. These are synthetic same-day schedules, not a verified retailer calendar. See [retailer data guide](docs/retailer-management.md) for the workflow, public data source and JSON formats.
 
-Frozen and dry products travel separately: Type A carries only ice cream; Type B carries only the other four SKUs. Mixed baskets generate two delivery jobs, while each local order book retains its parent retailer orders. Full order coverage requires all jobs of that order to be assigned. Partially planned orders remain in the incomplete-order list. Assigned-job window compliance is a modeled planning measure; actual deliveries are not tracked. Dispatch and allocation exports use version 2 to reflect the segregation policy and order/job accounting; settings exports use kind domtransport-settings, version 2 and contain all six masters. Legacy version-1 settings imports migrate the Pasig data without discarding edits.
+Frozen and dry products travel separately: Type A carries only ice cream; Type B carries only the other four SKUs. Mixed baskets generate two delivery jobs, while each local order book retains its parent retailer orders. Full order coverage requires all jobs of that order to be assigned. Partially planned orders remain in the incomplete-order list. Assigned-job window compliance is a modeled planning measure; actual deliveries are not tracked. All app exports now use CSV: network summaries, dispatch rows, allocation, retailer masters, public references and full settings backups. Settings CSV preserves all six masters and can be imported in Data studio. Legacy version-1/version-2 JSON settings imports remain supported. See [CSV formats and filtering](docs/csv-and-network-filter.md).
 
 Read [the approach draft](docs/approach-draft.md), [panel script](docs/panel-guide.md), [deployment handoff](docs/deployment.md) and [verification record](docs/verification.md). The PDF is deferred until the approach is finalized, as requested.
 
@@ -64,7 +64,7 @@ The checked-in `render.yaml` defines a Render **Static Site** on branch `main`, 
 
 [![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/domzxc/locusprototype)
 
-## JSON settings after hosting
+## Settings after hosting
 
 Settings and retailer receiving hours remain usable on Render. They are JSON-serializable configuration saved to localStorage in each visitor's browser; this app has no shared JSON server database. Synthetic orders and routes are regenerated from the saved configuration and seed.
 
@@ -86,7 +86,7 @@ The app uses CBM (cubic metres) and KG for vehicle capacities, order loads and m
 
 All clock fields and schedule displays use Philippine wall-clock time, PHT (UTC+8, Asia/Manila), independently of the browser timezone. Shift and illustrative truck-ban settings use clock inputs rather than raw minutes. Defaults are 6:00 AM-6:00 PM for the shift and 7:00 AM-9:00 AM for the illustrative ban. The ban is a synthetic, editable no-movement assumption, not a statement of current MMDA/LGU rules. Only same-day intervals are modeled; midnight in shift/ban end fields means the end of that day. Retailer receiving intervals remain within the same day.
 
-Internal JSON schedule values remain minutes after midnight to preserve compatibility. Exports include unit/time-basis metadata; the numeric fields are not UTC timestamps. Fleet reserve is entered as a percentage (15 means 15%) and stored as a fraction (0.15). Costs use PHP and distance uses KM. CBM is the same volume unit previously labeled cubic metres, so renaming alone changes no allocation.
+Internal JSON schedule values remain minutes after midnight to preserve compatibility. CSV report columns identify CBM, KG, PHP, KM and PHT; settings backups preserve the internal minute values. The numeric minute fields are not UTC timestamps. Fleet reserve is entered as a percentage (15 means 15%) and stored as a fraction (0.15). Costs use PHP and distance uses KM. CBM is the same volume unit previously labeled cubic metres, so renaming alone changes no allocation.
 
 
 See [six-distributor data and migration](docs/network-masters.md) for scoped settings, sample-size interpretation, exports and the browser verification checklist.
