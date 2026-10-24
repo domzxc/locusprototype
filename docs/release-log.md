@@ -100,3 +100,10 @@ Replaced route-colored order dots with shape/color status icons and a live-count
 - Added allocated/crew-ready/active/idle/blocked breakdown and opt-in temporary crew cover. Fresh Bulacan 2 A + 10 B with saved crews still staffs 2 A + 6 B; enabling cover explicitly adds four drivers/helpers and can create more routes.
 - Generated and visually checked the nine-page approach PDF, refreshed its Markdown and deterministic evidence, and prepared an email draft with both links. No email sent.
 - 106 tests and production build pass; browser interaction/WebGL remains unverified. See deployment-verification.md and verification.md.
+
+## 24 October 2026: automatic extra-truck road replanning
+
+- Editing temporary allocation now includes explicitly labeled assumed crew cover; uncheck to retain saved attendance limits.
+- Road-rejected/unserved portions get one new greedy-and-road validation batch on unused staffed trucks. Successful new routes update metrics, exports and modeled GPS together; no reloads or global optimization are claimed.
+- Added four road recovery regression tests. All 110 tests and production build pass. Refreshed and visually checked the nine-page PDF.
+- Browser access stopped at the URL-policy check before UI input; Render deployment of this change is not verified. GitHub publication is authorized separately by the user.

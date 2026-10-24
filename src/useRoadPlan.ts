@@ -9,12 +9,13 @@ export function useRoadPlan(base:Plan,orders:Order[],config:Config,fleet:{A:numb
   const [snapshot,setSnapshot]=useState<{key:string;result:Plan}|null>(null),[progress,setProgress]=useState(''),[elapsed,setElapsed]=useState(0),[error,setError]=useState(''),[approximateChosen,setApproximateChosen]=useState(false);
   const controller=useRef<AbortController|null>(null),version=useRef(0),preferRoad=useRef(true),started=useRef(0);
   useEffect(()=>{
+    let timer:ReturnType<typeof setTimeout>|undefined;
     version.current++;controller.current?.abort();setProgress('');setError('');
     if(enabled&&preferRoad.current&&base.routes.length){
       const cached=completed.get(key);
-      if(cached)setSnapshot({key,result:cached});else void load();
+      if(cached)setSnapshot({key,result:cached});else timer=setTimeout(()=>void load(),450);
     }
-    return ()=>{version.current++;controller.current?.abort();};
+    return ()=>{clearTimeout(timer);version.current++;controller.current?.abort();};
   },[key,enabled]);
   const loading=!!progress;
   useEffect(()=>{if(!loading)return;const timer=setInterval(()=>setElapsed(Math.floor((Date.now()-started.current)/1000)),1000);return()=>clearInterval(timer);},[loading]);

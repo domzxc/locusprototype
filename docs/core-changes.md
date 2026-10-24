@@ -77,3 +77,7 @@ Road exceptions now identify the failed receiving close, service shift deadline,
 ## Network filtering and spreadsheet exports
 
 The previously disabled All selector is now an active All/six-depot filter. Overview KPIs, normal/peak baseline, attendance, comparisons, risk and both exports follow the same selection. All export/download actions now produce CSV. Settings and retailer CSVs round-trip through validated imports; old JSON backups are still accepted. Network/dispatch/allocation CSVs are review reports, not configuration imports. See [CSV formats](csv-and-network-filter.md) for row types, PHT units and avoiding double-counting summary/vehicle rows.
+
+## Automatic added-truck replanning update
+
+This supersedes earlier statements that road-trimmed jobs are never retried. Editing temporary fleet allocation now includes explicitly labeled temporary crew cover by default, without editing saved attendance; uncheck it to test saved staff limits. After initial road validation, one bounded batch assigns missing portions to unused staffed trucks and road-checks those new sequences. Successful tours update the route list, KPIs, CSV and GPS geometry together. This is not a reload/second tour or global optimizer; remaining infeasibility and search limits stay visible.

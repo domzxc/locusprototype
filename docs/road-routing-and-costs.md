@@ -12,7 +12,7 @@ The app now prefers automatic OSRM road validation to each distributor dispatch 
 
 ## What road validation actually does
 
-The existing workload allocation and heuristic establish vehicle counts and stop sequences. Road validation does not optimize or reinsert previously rejected jobs. It asks OSRM's Route service for each existing sequence, preserving waypoint order. Returned leg KM replace detoured haversine KM; returned base minutes replace the editable base-speed calculation. Traffic multipliers still apply:
+The existing workload allocation and heuristic establish vehicle counts and stop sequences. Road validation does not globally optimize. After initial validation it makes one bounded recovery batch for omitted jobs on unused staffed trucks. These new sequences are road-checked before publication. It does not reload used vehicles or insert jobs into existing validated tours. It asks OSRM's Route service for each existing sequence, preserving waypoint order. Returned leg KM replace detoured haversine KM; returned base minutes replace the editable base-speed calculation. Traffic multipliers still apply:
 
 ```text
 Road leg minutes = OSRM duration seconds / 60 * network factor * destination factor

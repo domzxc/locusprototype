@@ -26,7 +26,7 @@ For jobs excluded by the approximate planner, final-tour screening checks every 
 
 ## Why a truck can return at 3 PM with unserved orders
 
-The prototype loads one tour per truck. The greedy planner builds a sequence; road validation removes failed stops and reroutes the remaining sequence, up to five passes per truck. It does not reinsert omitted jobs, exchange stops between trucks or schedule a depot reload and second trip. Removing stops can therefore leave substantial unused shift time.
+The prototype loads one tour per truck. The greedy planner builds a sequence; road validation removes failed stops and reroutes the remaining sequence, up to five passes per truck. It now retries omitted portions once on unused staffed trucks, creating fresh road-validated tours. It does not insert jobs into existing tours or schedule a reload and second trip on used trucks. Removing stops can therefore leave substantial unused shift time.
 
 The early-return table shows each returning vehicle, its PHT return and shift end, unused minutes, and the shared number of missing compatible portions. Counts repeat the same frozen/dry pool across vehicles and must not be summed. It does not claim the remaining jobs fit after returning, and does not invent actual delivery events.
 

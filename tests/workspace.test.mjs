@@ -104,7 +104,7 @@ test('depot tabs expose one active panel and operations review renders parent st
   assert.ok(html.includes('On time (planned)'));assert.ok(html.includes('Showing 100 of 100 orders'));
   const {default:EarlyReturn}=await server.ssrLoadModule('/src/EarlyReturnReview.tsx');
   const early=renderToString(createElement(EarlyReturn,{plan:result,config:c}));
-  for(const label of ['Early returns with unserved deliveries','No depot reload, second trip','Unused shift (min)','Unserved compatible portions'])assert.ok(early.includes(label),label);
+  for(const label of ['Early returns with unserved deliveries','No depot reload or second trip','Unused shift (min)','Unserved compatible portions'])assert.ok(early.includes(label),label);
  }finally{await server.close();}
 });
 

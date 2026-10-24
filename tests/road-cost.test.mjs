@@ -52,7 +52,7 @@ test('road trimming reroutes remaining stops and bounded validation conserves ev
   const c={...copy(defaults),traffic:1,ban:{...defaults.ban,enabled:false}},orders=ordersFor(c),fleet=allocate(orders,c),base=plan(orders,c,fleet);
   let calls=0;
   const router=async points=>{const r=await fakeRouter()(points);if(calls++===0)r.legs[0].minutes=1000;return r;};
-  const result=await validateRoadPlan(orders,c,fleet,base,router);
+  const result=await validateRoadPlan(orders,c,fleet,base,router,{recoverSpare:false}); // Isolate the trimming phase; recovery is tested separately.
   assert.ok(calls>1);assert.ok(result.routes.length>0);assert.ok(result.unassignedDeliveries.length>0);
   assert.equal(result.deliveryAssigned+result.unassignedDeliveries.length,result.deliveryTotal);
   for(const r of result.routes)assert.equal(r.roadLegs.length,r.stops.length+1);

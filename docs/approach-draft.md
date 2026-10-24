@@ -107,7 +107,7 @@ These are fresh-default sample recommendations for 100 normal and 150 peak order
 
 Recommended fleet is the demand-based target. Current fleet is the saved physical inventory. Crew-ready trucks = min(physical trucks, present drivers, floor(present helpers / helpers per truck)); zero required helpers removes the helper limit. No staff or vehicles are silently borrowed across depots.
 
-The fleet experiment also offers explicit temporary crew cover without changing saved attendance. Proposed peak uses max(saved trucks, recommended peak trucks), capped at 500/type, and declares temporary crew cover separately. It does not edit saved inventory or actual attendance. Current-resources peak shows the same demand against the saved fleet and crew.
+Editing the temporary fleet experiment assumes extra crew cover by default; uncheck it to test saved attendance. Saved data stays unchanged. Proposed peak uses max(saved trucks, recommended peak trucks), capped at 500/type, and declares temporary crew cover separately. It does not edit saved inventory or actual attendance. Current-resources peak shows the same demand against the saved fleet and crew.
 
 ## Mathematical models and constraints
 
@@ -160,13 +160,13 @@ The greedy score is 3 x leg KM + 0.12 x store-wait minutes + 0.012 x (receiving 
 
 ### 4. Validate the existing sequence against roads
 
-OSRM supplies ordered driving legs, distances, durations and geometry. Assumed area/zone delays adjust travel. Road validation removes failing stops and reroutes the remaining sequence, up to five passes per vehicle. Updates publish atomically; errors retain the labeled previous travel basis.
+OSRM supplies ordered driving legs, distances, durations and geometry. Assumed area/zone delays adjust travel. Road validation removes failing stops and reroutes the remaining sequence, up to five passes per vehicle. Omitted portions are retried once on unused staffed trucks with new road checks. Updates publish atomically; errors retain the labeled previous travel basis.
 
 ### 5. Review before dispatch
 
 Inspect every portion, its vehicle sequence, PHT arrival/start/finish, load, costs and exception reason. Scheduled, in-progress and served map states are simulated from the clock. Unserved and partial orders stay visible.
 
-> No depot reload, second tour, job exchange or reinsertion of removed road stops is implemented. A 3 PM return can be a short validated tour or search limitation; it is not proof every store was served, or proof more trucks are needed.
+> Omitted jobs get one road-checked retry on spare staffed trucks. No reload or second tour on used vehicles is implemented. A 3 PM return can be a short validated tour or search limitation; it is not proof every store was served, or proof more trucks are needed.
 
 ### Precise reasons rather than one combined failure
 
@@ -299,13 +299,13 @@ PART 3 | A CLEAR 30-MINUTE LEADERSHIP DISCUSSION
 
 - Why 254 when there are 200 orders? Fifty-four mixed baskets need separate frozen and dry deliveries. There are 254 required portions; full parent coverage needs every portion.
 
-- Why are trucks back at 3 PM? Their current loaded tours ended. No reload or reinsertion is planned; inspect failed timings and search limits before adding trucks.
+- Why are trucks back at 3 PM? Their current loaded tours ended. Spare staffed trucks get one retry; no used-truck reload is planned. Inspect timings and search limits.
 
 - Does 100% on time prove all stores were served? No. It checks only scheduled portions. The app also shows scheduled/required portions, incomplete parent orders and unserved reasons.
 
 ### Verification and practical limits
 
-The updated application passes 106 automated tests and the TypeScript/Vite production build. Checks cover payload/temperature, full windows, depot return, crew, peak, costs, conservation, road fixtures, CSV round-trips and server-rendered scope views. The existing large MapLibre bundle warning remains. Server-rendered and HTTP checks do not prove browser interactions, WebGL, actual delivery feasibility or spreadsheet display.
+The updated application passes 110 automated tests and the TypeScript/Vite production build. Checks cover payload/temperature, full windows, depot return, crew, peak, costs, conservation, road fixtures, CSV round-trips and server-rendered scope views. The existing large MapLibre bundle warning remains. Server-rendered and HTTP checks do not prove browser interactions, WebGL, actual delivery feasibility or spreadsheet display.
 
 ### Submission links
 

@@ -271,3 +271,7 @@ The current UI calls deliveries excluded from the plan **Unserved (planned)**; p
 Road exceptions now identify the failed receiving close, service shift deadline, depot-return deadline or search limit, with attempted PHT times. Approximate exceptions distinguish capacity, no trucks, absent crew and final-tour append checks. Reasons describe attempts, not proof that no alternative route could work. See [precise unserved reasons](unserved-diagnostics.md).
 
 **Panel response to trucks back at 3 PM:** ?That is the end of the current single loaded tour, not proof all orders were delivered. The prototype does not reload trucks or retry removed road stops. We inspect failed timings, initial-tour CBM/KG, crew and possible resequencing before concluding we need more trucks. We show early returns and unused shift time explicitly. Actual delivery confirmation is outside this simulation.?
+
+## Automatic added-truck replanning update
+
+This supersedes earlier statements that road-trimmed jobs are never retried. Editing temporary fleet allocation now includes explicitly labeled temporary crew cover by default, without editing saved attendance; uncheck it to test saved staff limits. After initial road validation, one bounded batch assigns missing portions to unused staffed trucks and road-checks those new sequences. Successful tours update the route list, KPIs, CSV and GPS geometry together. This is not a reload/second tour or global optimizer; remaining infeasibility and search limits stay visible.

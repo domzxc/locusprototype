@@ -1,4 +1,4 @@
-import { copy, DEPOT, summarizePlan } from './engine.js';
+import { copy, DEPOT, summarizePlan, plan } from './engine.js';
 import {crewAvailability} from './staffing.js';
 import {clock} from './planning-diagnostics.js';
 
@@ -89,7 +89,7 @@ export function createOsrmClient({fetchImpl=globalThis.fetch,intervalMs=1100,sto
 }
 
 // Validate the existing heuristic sequence against roads. Do not claim road-based optimisation.
-export async function validateRoadPlan(orders,c,fleet,base,router,{signal,onProgress=()=>{},maxPasses=5}={}) {
+export async function validateRoadPlan(orders,c,fleet,base,router,{signal,onProgress=()=>{},maxPasses=5,recoverSpare=true}={}) {
   const routes=[],missing=new Map(base.unassignedDeliveries.map(j=>[j.id,copy(j)]));
   const staffing=crewAvailability(c,fleet),attempted={A:0,B:0};
   const depot=c.depot??DEPOT;let maximumSnap=0;
@@ -132,6 +132,38 @@ export async function validateRoadPlan(orders,c,fleet,base,router,{signal,onProg
     }
     if(!completed)for(const job of jobs)reject(job,`Road validation stopped after ${maxPasses} pass(es) for ${original.id}. Remaining sequence not tested successfully; feasibility is unresolved. No reinsertion or second tour was attempted.`,'search-limit');
   }
+  // One bounded recovery batch: load omitted portions onto unused staffed trucks.
+  // Never reload used vehicles, invent a crew, or publish approximate-only routes.
+  if(recoverSpare&&missing.size&&maxPasses>0){
+    const spare=Object.fromEntries(['A','B'].map(type=>[type,Math.max(0,staffing.fleet[type]-routes.filter(r=>r.type===type).length)]));
+    if(spare.A||spare.B){
+      const parents=new Map();
+      for(const job of missing.values()){
+        const type=job.cold?'A':'B';if(!spare[type])continue;
+        const id=job.parentId??job.id;
+        if(!parents.has(id)){
+          const {reason,reasonCode,...data}=copy(job);
+          parents.set(id,{...data,id,quantities:job.quantities.map(()=>0),volume:0,weight:0,cold:false});
+        }
+        const p=parents.get(id);p.quantities=p.quantities.map((q,i)=>q+job.quantities[i]);p.volume+=job.volume;p.weight+=job.weight;p.cold||=job.cold;
+      }
+      const pending=[...parents.values()],seed=plan(pending,c,spare);
+      if(seed.routes.length){
+        abort(signal);onProgress('Retrying unserved portions on spare staffed trucks...');
+        const recovered=await validateRoadPlan(pending,c,spare,seed,router,{signal,onProgress:message=>onProgress(`Spare-truck recovery: ${message}`),maxPasses,recoverSpare:false});
+        maximumSnap=Math.max(maximumSnap,recovered.roadMeta.maximumSnapMetres);
+        for(const route of recovered.routes){
+          let n=1;while(routes.some(r=>r.id===`${route.type}-${String(n).padStart(2,'0')}`))n++;
+          routes.push({...route,id:`${route.type}-${String(n).padStart(2,'0')}`});
+          for(const job of route.stops)missing.delete(job.id);
+        }
+        for(const job of recovered.unassignedDeliveries){
+          const old=missing.get(job.id);
+          if(old)missing.set(job.id,{...old,reason:`${old.reason} Spare-truck retry: ${job.reason}`});
+        }
+      }
+    }
+  }
   abort(signal);
-  return {...summarizePlan(orders,c,fleet,routes,[...missing.values()]),travelBasis:'road',roadMeta:{provider:'OSRM driving',validatedAt:new Date().toISOString(),maximumSnapMetres:maximumSnap,method:'Existing sequence; reroute after removing infeasible stops. No truck-specific or live-traffic validation.'}};
+  return {...summarizePlan(orders,c,fleet,routes,[...missing.values()]),travelBasis:'road',roadMeta:{provider:'OSRM driving',validatedAt:new Date().toISOString(),maximumSnapMetres:maximumSnap,method:'Validate greedy sequences, remove infeasible stops, then one bounded retry on spare staffed trucks. No reload, truck-specific or live-traffic validation.'}};
 }
