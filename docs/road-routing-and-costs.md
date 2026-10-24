@@ -1,11 +1,11 @@
 # Road routes and extended cost estimates
 
-This update adds optional OSRM road validation to each distributor dispatch view and editable cost assumptions to each distributor master. The app remains a static frontend with no backend or API key. Road validation requires internet and sends coordinates to the public routing service; it does not send retailer names, order quantities or costs.
+The app now prefers automatic OSRM road validation to each distributor dispatch view and editable cost assumptions to each distributor master. The app remains a static frontend with no backend or API key. Road validation requires internet and sends coordinates to the public routing service; it does not send retailer names, order quantities or costs.
 
 ## How to use it
 
-1. Select a distributor and open Dispatch planner. The initial plan is labeled approximate.
-2. Click **Use road routes & recheck**. The app requests road legs for each proposed vehicle sequence, with progress and cancellation controls.
+1. Select a distributor and open Dispatch planner. Road validation starts automatically for the selected distributor; the provisional baseline is labeled and playback stays locked until roads arrive, unless you explicitly choose approximate mode.
+2. Use **Use road routes & recheck** to retry or return from approximate mode. Dispatch requests road legs for each proposed vehicle sequence, with progress and cancellation controls.
 3. On success, the map draws road geometry, modeled GPS follows it, and manifests/KPIs use the road-validated schedule and distance. Stops that no longer fit remain incomplete, with a road-validation reason.
 4. Open **Estimated cost breakdown** for the operating estimate and separate risk/opportunity exposure. Edit inputs in Data studio and apply. Any input, scenario or fleet change invalidates the previous road result; validate again.
 5. Export the selected plan to keep road geometry, schedules, costs and provenance as a review snapshot. Road responses are cached in memory for the session, not saved to settings/localStorage. Reloading requires validation again. **Use approximate plan** returns explicitly to the initial heuristic plan.
@@ -95,3 +95,10 @@ These are observed outputs from a public routing response, not a stable benchmar
 Automated fixtures cover road schedules/geometry, road-bend GPS interpolation, restriction waiting, trimming/rerouting, job conservation, failure/cancellation, malformed responses, caching, cost arithmetic and migration. Real service smoke checks succeeded, but browser interaction/WebGL visual QA and Render deployment remain unverified. A passing HTTP smoke check alone does not establish end-user browser behavior.
 
 No application backend or paid dependency was added. For rollback, export settings first and revert the feature commit normally. Old settings without `costing` receive declared defaults; road results are transient and can be discarded with the approximate-plan control.
+
+
+## Sales-audience and playback update
+
+The Panel Guide now maps the business problem to Part 1 and Part 2 explicitly. Pasig serves its own assigned retailers; it is not the central depot for all six. Fleet sizing is explained as checking space, weight and delivery hours, with technical calculation available on demand. Traffic controls display extra time percentages while retaining existing internal factors; no saved numerical assumptions change. The user explicitly selected assumed traffic, so no live provider/key was added.
+
+Roads are preferred on opening Dispatch. Straight route connections are hidden and playback/scrubbing are disabled until road data arrives, unless approximate mode is explicitly selected. Failed/cancelled requests do not unlock straight-line playback silently. Playback has Slow/Demo/Fast speeds and uses smaller time steps; map markers update in place. Store manifests separate driving, receiving/ban waiting and handling, including loading/unloading/fixed allowances. Browser interaction and smoothness remain unverified because no supported browser is available.

@@ -4,6 +4,53 @@ Review draft · 30-minute session. The approach document is `approach-draft.md`.
 
 For technical rehearsal, read [module review notes](prototype-review-notes.md); for the reasons behind the core changes, read [the decision record](core-changes.md). Both match the current six-distributor implementation and distinguish sample-day results from production recommendations.
 
+## Problem statement and depot scope
+
+The regional manager must allocate refrigerated Type A vans and larger dry Type B trucks to six distributors for normal days, September-December peak season, and changing demand. They serve about 50,000 mapped retailers. Each retailer has one distributor; that population is not a daily order count. Five SKUs are sold: toothpaste, ice cream, soap, water purifier and tea. Ice cream needs frozen transport.
+
+Pasig is the main presentation example, **not one central depot serving all six distributors' retailers**. Each distributor has its own modeled depot and retailer master. Its vehicles start and return there. No stock transfers, vehicle pooling or reassignment between depots are modeled.
+
+The challenge describes five years of orders, vehicle details, addresses and mappings, but no actual files were supplied. Our demo uses synthetic orders and declared assumptions. It does not claim trained forecasts or real execution results.
+
+## Part 1: approach, models and variables in business terms
+
+1. **Understand what must be delivered.** For each distributor, read product boxes, space in CBM, weight in KG, frozen/dry requirements, store locations and receiving hours. Peak multiplies box quantities and rounds up; it does not create extra stores. Real order history would support the production forecast.
+2. **Estimate the work.** Include loading/unloading allowances, fixed stop handling, assumed traffic delays, available shift hours, vehicle capacity and a safety allowance. The daily route check additionally applies road legs, full receiving windows, illustrative truck-ban waiting and return-to-depot time.
+3. **Choose the limiting requirement.** Work out trucks needed for space, weight and hours; use the largest requirement, add reserve and round up. Calculate A and B separately. If space needs 4 trucks, weight needs 3 and time needs 6, time is the limiting factor; a 15% allowance gives ceil(6 x 1.15) = 7 in that illustration. The fresh Pasig sample actually recommends 2 A + 6 B; saved edits can change it.
+4. **Check service and cost.** Route the proposed fleet. Keep incomplete and partial orders visible. Estimate base transport, idle fleet, maintenance, toll allowance and overtime; show estimated frozen damage and profit at risk separately. These are assumptions, not confirmed losses or invoices.
+5. **Plan for change.** Compare normal/peak, replan daily, review demand weekly and fleet monthly/before peak. Investigate sustained demand drift, missed stores, unused trucks or high space use before changing permanent capacity.
+
+The implemented models are a binding-resource workload estimate and a greedy, constraint-aware routing heuristic, followed by road validation of its existing sequence. They are not mathematical optimizers. The approach draft describes proposed production forecasting, heterogeneous-fleet routing and scenario fleet investment models.
+
+Main variables: distributor-to-retailer assignment; order counts; product mix/box quantities; CBM/KG per box; truck capacities/costs; retailer/depot coordinates; receiving windows and closed/archive status; loading/unloading/fixed handling; road distance/base time; assumed area and zone congestion; PHT shift/preparation/ban interval; reserve; peak growth; idle/maintenance/toll/overtime rates; frozen inventory cost/damage assumption; contribution profit per undelivered SKU box.
+
+## Part 2: what the live prototype demonstrates
+
+| Requirement | What to show |
+|---|---|
+| One distributor, about 100 synthetic orders | Select Pasig. A fresh master starts with 100 profiles; saved edits may differ. The same workflow is also available for the other five distributors |
+| Location, SKU mix, volume and delivery window | Order book and retailer/product masters show coordinates, boxes, CBM/KG and receiving hours |
+| Vehicles allocated in Part 1 | The recommendation directly supplies the daily fleet; override counts only for a what-if test |
+| Vehicle assignment and sequence on a map | Wait for automatically requested roads, select a truck, inspect its numbered manifest and play the road-following simulation |
+| Capacity, windows and frozen compatibility | Both CBM/KG limits, full handling before store close, shift return and temperature separation are enforced; road-infeasible stops remain exceptions |
+| Vehicles, utilization, distance, on-time and cost | Show used/allocated vehicles, truck space use, road KM, assigned-job window compliance, complete-order coverage, drops and the cost breakdown |
+| Fleet too large or too small | Compare idle trucks and missed stores. Tight receiving hours, truck bans, poor sequences or an oversized job may need a different fix from adding vehicles |
+
+This is a synthetic day tested under operational constraints, not a record of actual deliveries. A mixed order has frozen and dry jobs; both must fit to count complete. The chosen policy keeps dry products on B as well as ice cream on A. There is no same-truck frozen/dry co-loading.
+
+## Plain-language labels to rehearse
+
+| Interface label | Explain it this way |
+|---|---|
+| Extra travel time in this zone (%) | An assumed congestion delay. 65% turns 20 minutes into 33 minutes before the area-wide delay |
+| Extra travel time across the area (%) | Another assumed delay applied across the distributor. It combines by multiplication with the local delay, not simple addition |
+| Regular paid working hours / day | The assumed paid-hours allowance before the model adds overtime cost |
+| Estimated frozen boxes damaged or spoiled (%) | An assumed risk fraction, not a measured failure rate |
+| Cost value of one frozen box (PHP) | Inventory cost used to estimate damage exposure, not selling price |
+| Estimated profit at risk per undelivered box | Contribution profit potentially missed on unassigned boxes, not full sales revenue or a confirmed cancellation |
+
+The user chose **road routes with assumed traffic only**. No live traffic provider is connected. A short road trip can still take substantial total time once truck-ban waiting, receiving wait and handling are added. The manifest separates those minutes. Per-box loading and unloading are conservatively budgeted inside stop handling; there is no separate warehouse loading queue simulation.
+
 ## Opening: the decision in 30 seconds
 
 “I separated the strategic fleet decision from daily routing. We size refrigerated capacity for cold-chain demand, use larger dry trucks for compatible baskets, reserve seasonal uplift, and validate the fleet against daily service constraints. Every figure in this demo is synthetic. I will show both a feasible plan and what happens when capacity becomes insufficient.”
@@ -17,7 +64,7 @@ For technical rehearsal, read [module review notes](prototype-review-notes.md); 
 | 5–7 | Explain binding volume / weight / time workload, then routing validation | Aggregate sizing alone cannot guarantee feasibility |
 | 7–9 | Open Dispatch; normal seed 42; show 100 orders and coverage | Cold chain and full windows are modeled hard constraints |
 | 9–10 | Select A-01 and inspect its manifest | Only ice cream on A; dry portions travel separately on B. Show KG, CBM and parent retailer IDs |
-| 10–11 | Play modeled GPS, pause and scrub | Clearly label simulation and estimated travel |
+| 10–11 | Wait for road validation; play road simulation, pause and scrub | Clearly label simulation and estimated travel |
 | 11–12 | Switch to peak | Larger baskets increase payload/handling, with integer case rounding |
 | 12–13 | Set both fleet counts to zero or sharply reduce them | Coverage collapses; unassigned orders remain visible; on-time alone is insufficient |
 | 13–14 | Restore recommendation; change network traffic to 2 in Data studio and Apply | The model recalculates allocation and dispatch under changed assumptions |

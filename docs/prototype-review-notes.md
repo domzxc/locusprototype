@@ -214,7 +214,7 @@ Code: [MapView.tsx](../src/MapView.tsx), `positionAt` in [engine.js](../engine.j
 
 MapLibre displays OSRM road geometry after road validation, or labeled straight connections in approximate mode, assigned stops, red incomplete-order markers and the selected depot. A partial parent can therefore appear as an exception at a location that also has an assigned stop. Red is an incomplete plan marker, not an actual failed delivery event.
 
-The manifest is the numerical route record: sequence, products, receiving window, service start/finish, waits, CBM/KG, cost and return time. GPS playback interpolates along road geometry in road mode and between scheduled coordinates in approximate mode, waits during restrictions/receiving/handling, and returns to that route's depot. Playback advances three modeled minutes per tick. It is not live tracking, a drivable-road guarantee or cold-chain temperature monitoring.
+The manifest is the numerical route record: sequence, products, receiving window, service start/finish, waits, CBM/KG, cost and return time. GPS playback interpolates along road geometry in road mode and between scheduled coordinates in approximate mode, waits during restrictions/receiving/handling, and returns to that route's depot. Playback offers Slow/Demo/Fast speeds with smaller time steps; roads are preferred and approximate playback requires an explicit choice. It is not live tracking, a drivable-road guarantee or cold-chain temperature monitoring.
 
 ## 14. Persistence, public references and hosting
 
@@ -240,4 +240,4 @@ Render's static-site configuration runs `npm ci && npm test && npm run build` an
 
 Rehearsal: open Network overview; select Pasig; explain one mixed basket and its two jobs; inspect A/B manifests; reduce the fleet to expose misses; restore; edit one receiving window or traffic factor; compare another distributor's unchanged master; finish with network totals and limitations. Export settings before experiments so your exact demo state can be restored.
 
-Evidence: 51 automated checks and production build passed at the latest code milestone. Server-rendering smoke passed; browser interaction/map visual QA and Render verification remain outstanding. [Verification record](verification.md) lists the limits. Do not describe the demo as live GPS, trained AI forecasting, legal truck-ban enforcement, proven optimization or verified savings.
+Evidence: 53 automated checks and production build passed at the latest code milestone. Server-rendering smoke passed; browser interaction/map visual QA and Render verification remain outstanding. [Verification record](verification.md) lists the limits. Do not describe the demo as live GPS, trained AI forecasting, legal truck-ban enforcement, proven optimization or verified savings.

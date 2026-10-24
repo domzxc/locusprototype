@@ -35,8 +35,11 @@ New road/cost extension: optional OSRM validation now replaces straight connecti
 
 ## What the evidence supports
 
-The latest implementation has 51 passing automated checks and a successful TypeScript/Vite production build. A server-rendering smoke check covered the overview and all six settings/retailer views. Browser interactions, map/WebGL visual behavior and hosted Render smoke tests remain unverified. The known large MapLibre bundle warning remains documented.
+The latest implementation has 53 passing automated checks and a successful TypeScript/Vite production build. A server-rendering smoke check covered the overview and all six settings/retailer views. Browser interactions, map/WebGL visual behavior and hosted Render smoke tests remain unverified. The known large MapLibre bundle warning remains documented.
 
 These checks support the modeled invariants and reproducibility. They do not establish real-world fleet sufficiency, navigable roads, temperature compliance, actual delivery performance, regulatory compliance or cost savings.
 
 Read the [module review notes](prototype-review-notes.md) for calculations and the [approach document](approach-draft.md) for proposed production models and review triggers.
+
+
+Panel simplicity update: Panel Guide now states the brief and maps Parts 1/2 to implemented behavior. Pasig depot ownership is explicit. Binding-resource math has a space/weight/time explanation; traffic is entered as extra time percentages, and risk inputs use plain business labels. Roads are preferred before playback, with an explicit approximate fallback. The user chose assumed traffic rather than a live-provider integration.

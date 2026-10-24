@@ -42,7 +42,7 @@ The Vite build in `dist` is the deployment artifact. Node 24 is selected for Ren
 ## What to explore
 
 - **Network overview:** combined results and a six-distributor comparison, with normal/peak scenarios and network plan export. Starts with 100 synthetic profiles per distributor (600 total), preserving saved Pasig data.
-- **Dispatch planner:** select any of the six distributors; 100 seeded orders each by default, five SKUs, cold-only compatibility, volume and weight capacity, full-service windows, shift return and an illustrative truck restriction. Normal/peak scenarios; fleet overrides reveal unassigned orders. Select a vehicle, inspect its manifest and scrub or play modeled GPS. Use road routes & recheck requests OSRM road geometry and revalidates the sequence; progress, cancellation and explicit approximate fallback are available.
+- **Dispatch planner:** select any of the six distributors; 100 seeded orders each by default, five SKUs, cold-only compatibility, volume and weight capacity, full-service windows, shift return and an illustrative truck restriction. Normal/peak scenarios; fleet overrides reveal unassigned orders. Select a vehicle, inspect its manifest and scrub or play modeled GPS. Road geometry is requested automatically when Dispatch opens; playback waits for roads unless approximate mode is explicitly selected. Retry, cancellation and speed controls are available. Traffic remains assumed, not live.
 - **Fleet allocation:** normal and peak Type A/B counts for each independent synthetic sample. The assumed 50,000 mapped-retailer footprint is displayed separately; these sample fleet counts are not a full-scale recommendation.
 - **Data studio:** traffic by zone, speed and detour, per-product loading/unloading time, vehicle payload/cost, extended operating/risk costs, shift, demand and a vehicle-type restriction. Apply validates and recalculates. Import/export settings for portability.
 - **Retailer management:** add/edit synthetic profiles, addresses, local distributor ownership, coordinates, receiving windows and closed-day status; archive/restore; search and JSON import/export. A separate tab provides ten source-linked Metro Manila public reference records, with unknown receiving hours and coordinates left empty.
@@ -86,3 +86,6 @@ Internal JSON schedule values remain minutes after midnight to preserve compatib
 
 
 See [six-distributor data and migration](docs/network-masters.md) for scoped settings, sample-size interpretation, exports and the browser verification checklist.
+
+
+Panel-friendly explanation: the in-app Panel Guide states the problem, how Parts 1 and 2 are addressed, and the six-depot scope. Fleet sizing compares space/weight/time; traffic controls show extra travel time percentages, and cost-risk inputs use plain business terms. Store manifests show driving, waiting and handling minutes separately.

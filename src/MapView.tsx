@@ -6,8 +6,9 @@ import { positionAt } from '../engine.js';
 import type { Order, Point, Route } from './types';
 import { COLORS } from './palette';
 
-export default function MapView({routes,unserved,selected,minute,depot,distributor,travelBasis}:{routes:Route[];unserved:Order[];selected:string;minute:number;depot:Point;distributor:string;travelBasis:'road'|'approximate'}) {
+export default function MapView({routes,unserved,selected,minute,depot,distributor,travelBasis,showConnections}:{routes:Route[];unserved:Order[];selected:string;minute:number;depot:Point;distributor:string;travelBasis:'road'|'approximate';showConnections:boolean}) {
   const container=useRef<HTMLDivElement>(null), map=useRef<maplibregl.Map|null>(null);
+  const vehicleMarkers=useRef<{route:Route;marker:maplibregl.Marker}[]>([]);
   const [ready,setReady]=useState(false), [error,setError]=useState('');
   useEffect(()=>{
     if(!container.current) return;
@@ -28,7 +29,7 @@ export default function MapView({routes,unserved,selected,minute,depot,distribut
     const features:Feature[]=[];
     routes.forEach((r,i)=>{
       const color=COLORS[i%COLORS.length], active=!selected||r.id===selected;
-      features.push({type:'Feature',properties:{kind:'route',color,opacity:active?.85:.14},geometry:{type:'LineString',coordinates:r.roadLegs?r.roadLegs.flatMap(l=>l.geometry):[[depot.lng,depot.lat],...r.stops.map(s=>[s.lng,s.lat]),[depot.lng,depot.lat]]}});
+      if(showConnections)features.push({type:'Feature',properties:{kind:'route',color,opacity:active?.85:.14},geometry:{type:'LineString',coordinates:r.roadLegs?r.roadLegs.flatMap(l=>l.geometry):[[depot.lng,depot.lat],...r.stops.map(s=>[s.lng,s.lat]),[depot.lng,depot.lat]]}});
       r.stops.forEach(s=>features.push({type:'Feature',properties:{kind:'stop',color,opacity:active?1:.3},geometry:{type:'Point',coordinates:[(s.roadPoint??s).lng,(s.roadPoint??s).lat]}}));
     });
     unserved.forEach(s=>features.push({type:'Feature',properties:{kind:'stop',color:'#d03434',opacity:1},geometry:{type:'Point',coordinates:[s.lng,s.lat]}}));
@@ -41,7 +42,7 @@ export default function MapView({routes,unserved,selected,minute,depot,distribut
       m.addLayer({id:'stops',type:'circle',source:'plan',filter:['==','kind','stop'],paint:{'circle-radius':5,'circle-color':['get','color'],'circle-opacity':['get','opacity'],'circle-stroke-color':'#fff','circle-stroke-width':1.5}});
     }
     m.setPaintProperty('routes','line-dasharray',travelBasis==='road'?[1,0]:[2,1]);
-  },[routes,unserved,selected,ready,depot,travelBasis]);
+  },[routes,unserved,selected,ready,depot,travelBasis,showConnections]);
   useEffect(()=>{
     const m=map.current;
     if(!m||!ready)return;
@@ -57,12 +58,16 @@ export default function MapView({routes,unserved,selected,minute,depot,distribut
     const markers:maplibregl.Marker[]=[];
     const pin=document.createElement('div'); pin.className='depot-pin';pin.textContent='D';pin.title=`${distributor} distribution center`;
     markers.push(new maplibregl.Marker({element:pin}).setLngLat([depot.lng,depot.lat]).addTo(m));
+    vehicleMarkers.current=[];
     routes.filter(r=>!selected||r.id===selected).forEach(r=>{
-      const pos=positionAt(r,minute), el=document.createElement('div');
-      el.className='truck-pin';el.textContent=r.id;el.title=`${r.id}: ${pos.status}`;
-      markers.push(new maplibregl.Marker({element:el}).setLngLat([pos.lng,pos.lat]).addTo(m));
+      const el=document.createElement('div');
+      el.className='truck-pin';el.textContent=r.id;el.title=r.id;
+      const marker=new maplibregl.Marker({element:el}).setLngLat([depot.lng,depot.lat]).addTo(m);markers.push(marker);vehicleMarkers.current.push({route:r,marker});
     });
-    return ()=>markers.forEach(marker=>marker.remove());
-  },[routes,minute,selected,ready,depot,distributor]);
-  return <div className="map-wrap"><div ref={container} className="map" aria-label={`${distributor} delivery routes map`}/><div className="map-label"><span className="live-dot"/>{distributor.toUpperCase()} DISTRIBUTION CENTER</div><div className="map-note">{travelBasis==='road'?<>Road geometry: <a href="https://project-osrm.org/" target="_blank" rel="noreferrer">OSRM</a> / <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">OpenStreetMap</a> - driving profile</>:'Approximate connections - not road routing'}</div>{error&&<div className="map-error" role="status">{error}</div>}</div>;
+    return ()=>{markers.forEach(marker=>marker.remove());vehicleMarkers.current=[];};
+  },[routes,selected,ready,depot,distributor]);
+  useEffect(()=>{
+    for(const {route,marker} of vehicleMarkers.current){const pos=positionAt(route,minute);marker.setLngLat([pos.lng,pos.lat]);marker.getElement().title=`${route.id}: ${pos.status}`;}
+  },[minute,routes,selected,ready]);
+  return <div className="map-wrap"><div ref={container} className="map" aria-label={`${distributor} delivery routes map`}/><div className="map-label"><span className="live-dot"/>{distributor.toUpperCase()} DISTRIBUTION CENTER</div><div className="map-note">{travelBasis==='road'?<>Road geometry: <a href="https://project-osrm.org/" target="_blank" rel="noreferrer">OSRM</a> / <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">OpenStreetMap</a> - driving profile</>:showConnections?'Approximate connections - not road routing':'Loading roads or awaiting retry - no straight-line playback'}</div>{error&&<div className="map-error" role="status">{error}</div>}</div>;
 }

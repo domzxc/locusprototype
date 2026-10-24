@@ -5,7 +5,7 @@ RISK: medium
 
 ## Summary
 
-Added optional OSRM road validation to the six-distributor browser prototype: road geometry, schedule/distance recalculation, conservative stop trimming, road-following simulated GPS, cancellation, caching and labeled approximate fallback. Added editable operating allowances and separate risk/opportunity exposure, with cost breakdowns and updated panel notes. The user request extends the earlier frontend-only scope to an external public routing service; no backend or API key was added. All 51 automated checks and production build pass; live road smoke checks and SSR checks pass. Browser events/WebGL and Render deployment remain unverified.
+Made the panel-facing prototype easier to explain: new Problem/Part 1/Part 2 guide, explicit six-depot scope, plain-language space/weight/time sizing and traffic/cost-risk labels. Roads are preferred on entering Dispatch; straight connections and playback stay hidden/locked unless roads load or approximate mode is explicitly chosen. Playback has smaller time steps, speed controls and marker reuse; manifests separate driving/waiting/handling minutes. The user chose assumed traffic only, so no live traffic provider was added. All 53 tests and the production build pass. SSR content checks pass; browser interaction, visual smoothness and Render deployment remain unverified.
 
 ## Files changed
 
@@ -13,6 +13,7 @@ Added optional OSRM road validation to the six-distributor browser prototype: ro
 |---|---|
 | src/App.tsx | Navigation, dispatch, manifests, order book, fleet overrides, allocation view, panel guide, local persistence and import/export |
 | src/MapView.tsx | MapLibre raster basemap, colored routes, unassigned markers, depot and scheduled simulated positions |
+| src/PanelGuide.tsx, src/PlanningSteps.tsx, src/planning-explanation.js, src/planning-explanation.d.ts | Sales-audience problem/solution walkthrough, business sizing explanation, traffic percent conversion and stop timeline |
 | src/Settings.tsx | Scoped logistics form, local depot/zone coordinates, CBM/KG packaging and PHT clocks |
 | road-routing.js, road-routing.d.ts, src/useRoadPlan.ts | Public OSRM client/parser, rate spacing/cache, atomic fixed-sequence road validation and stale-request protection |
 | costing.js, costing.d.ts, src/CostSummary.tsx | Editable assumptions, operating/risk components and breakdown UI |
@@ -22,7 +23,7 @@ Added optional OSRM road validation to the six-distributor browser prototype: ro
 | engine.js | Peak case accounting, separate frozen/dry jobs, parent-order completion, receiving-hour validation/enforcement, regional sizing proxy and modeled GPS |
 | src/RetailerManagement.tsx | Synthetic profile CRUD/archive, receiving schedules, validated import/export and separate public-reference catalog; replaces RetailerHours.tsx |
 | src/data/metro-manila-retailer-references.json | Ten source-attributed public address references; receiving windows and verified coordinates deliberately null |
-| tests/planning.test.mjs, tests/retailers.test.mjs, tests/ph-conventions.test.mjs, tests/network.test.mjs, tests/road-cost.test.mjs | Fifty-one meaningful planning, KPI, master-data and provenance-boundary tests |
+| tests/planning.test.mjs, tests/retailers.test.mjs, tests/ph-conventions.test.mjs, tests/network.test.mjs, tests/road-cost.test.mjs, tests/explanation.test.mjs | Fifty-three meaningful planning, KPI, master-data and provenance-boundary tests |
 | .gitignore | Exclude environment variants and local tool/settings directories |
 | README.md, docs | Usage, approach equations, baseline results, panel defence, deployment and this record |
 
@@ -30,7 +31,7 @@ Added optional OSRM road validation to the six-distributor browser prototype: ro
 
 | Command | Outcome |
 |---|---|
-| npm test | 51 tests passed, zero failures, including road schedules/geometry/GPS bends, trim conservation, cancellation/failure, partial-parent margin, cost arithmetic and migration |
+| npm test | 53 tests passed, zero failures; added traffic-percent compatibility and full stop-timeline accounting to the existing planning/road/cost invariants |
 | npm run build | TypeScript passed; Vite production build succeeded. Known large MapLibre chunk warning |
 | Vite SSR + renderToString smoke | Overview and all six local settings/retailer views rendered with expected local zone/profile content; not a browser interaction test |
 | node --input-type=module baseline calculation | Normal 2 A + 6 B, 8 used, 93 fully planned parent orders, 1 partial, 118/125 jobs, 164.921 km, PHP 14,892.953; peak 3 A + 10 B, 12 used, 100 fully planned, 125/125 jobs, 184.970 km, PHP 20,736.425 |
@@ -129,3 +130,10 @@ Road routing and costs (24 October 2026): test-first import failed while the roa
 Live service evidence: an identified CLI request to OSRM returned Ok, road geometry and Access-Control-Allow-Origin: *. Three-order Pasig road validation served 3/3, 16.2055 KM, 601 geometry points, maximum snap 89.72 m. A single fresh 100-order validation used eight vehicles, assigned 109/125 jobs and fully planned 84/100 parents over 226.2598 KM; operating estimate PHP 17,937.3984, risk/opportunity PHP 14,102, combined PHP 32,039.3984, maximum snap 185.89 m. These are observations, not stable live benchmarks or actual execution results. Requests were sequential and rate-spaced; no road matrix/bulk service was queried.
 
 SSR smoke passed for Network overview, all six costing forms and cost breakdowns, checking expected labels and absence of NaN. Browser inventory still reported no enabled apps/browsers. Production build passes with the known MapLibre chunk warning. Reviewed the requested map/cost scope first, then request cancellation/atomicity, coordinate-only transmission, stale response handling, no-silent-fallback labels, cost boundaries/double counting and export provenance. Public driving-profile routes do not verify truck access or live traffic. Network overview remains labeled as the approximate baseline. docs/road-routing-and-costs.md provides formulas, provider docs, workflow and rollback. Browser event/WebGL visual QA, hosted CORS and Render smoke testing remain outstanding. Rollback: export settings and revert this feature commit; no data service migration is required.
+
+
+Sales-audience explanation and playback update (24 October 2026): clarified Pasig serves its assigned master, while all six distributors retain independent depots. Extracted PanelGuide and PlanningSteps from App and mapped both requested parts explicitly. Traffic fields display extra-time percentages but retain the existing factors on save (65% maps to 1.65); area/zone effects still multiply. Changed paid hours, frozen damage percentage/value and undelivered-box profit labels with examples. Formula details are optional; primary explanation compares space, weight and delivery hours.
+
+Road-first UI review: useRoadPlan requests roads only when Dispatch is active and road preference is selected; base/input or page changes abort stale work. Approximate selection is explicit and persistent for the session. The UI suppresses straight connections and disables play/scrub while no valid road result is available (waiting, cancelled or failed), unless approximate mode is chosen. A previously valid road result can remain playable during a same-input retry. In-flight errors retain the labeled basis. Reused map markers remove per-frame recreation, and 50 ms playback updates replace 3-minute jumps; Slow/Demo/Fast controls use 1/5/15 modeled minutes per second. This is still simulated GPS with assumed traffic. No live provider/key was added after the user's explicit preference.
+
+Verification: all 53 tests pass, including traffic percentage round-trip and exact driving + restriction wait + receiving wait + handling timeline accounting. SSR checks rendered the new guide with Problem/Part 1/Part 2/depot clarification, all six plain-language settings/planning steps and the main overview. Browser inventory remains empty, so automatic requests, disabled controls, speed selection and visual road smoothness are reviewed in code but not interaction-tested. Production build passes with the pre-existing MapLibre size warning. Existing road-provider HTTP smoke evidence above remains applicable; no redundant full-day API request was made. Rollback is a normal revert; numeric settings and cost assumptions are unchanged. New UI behavior and labeling are documented in panel-guide.md and road-routing-and-costs.md.
