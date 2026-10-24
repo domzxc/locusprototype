@@ -413,3 +413,13 @@ footer>span:last-child{text-align:right}
 .manifest-timing-help{padding:0 20px 14px;color:#61677e;font-size:11px;line-height:1.65}
 .manifest-timing-help p{margin:0 0 6px}
 .manifest-timing-help strong{color:#342842}
+
+.attendance-editor{padding:0 20px 16px;color:#61677e;font-size:11px;line-height:1.65}
+.attendance-editor h3{color:#342842;font-size:13px}
+.attendance-editor fieldset{border:1px solid #eae7f0;border-radius:8px;margin:12px 0;padding:12px}
+.attendance-editor legend{color:#342842;font-weight:600;padding:0 6px}
+.attendance-editor .depot-fields{padding:0}
+
+.kpi-grid.network-kpis{grid-template-columns:repeat(3,minmax(0,1fr))}
+@media(max-width:900px){.kpi-grid.network-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:560px){.kpi-grid.network-kpis{grid-template-columns:1fr}}

@@ -129,3 +129,12 @@ Philippine-unit defence: "We plan against both CBM and KG because a load can rea
 ## Daily orders and current trucks
 
 Open **Depot planning** in the sidebar. Each depot has + / - controls for daily parent-order count, current Type A vans and current Type B trucks. Apply the depot plan to save and recalculate. Initial current counts are synthetic assumptions copied from the normal recommendation once; peak demand does not create trucks automatically. Compare saved availability with normal/peak recommendations. Dispatch and Network overview use saved current fleets; Try recommended fleet is a temporary local experiment. Lowering orders preserves retailer profiles; raising demand beyond active profiles adds synthetic stores.
+
+
+## Attendance and the 6 AM departure question
+
+Say: "Having trucks is not the same as having dispatch capacity. Each truck needs a present driver and its required helpers. We show attendance, crew-ready vehicles and trucks blocked by absences. If service falls because people are absent, buying more trucks is not the first solution."
+
+Open Depot planning, reduce Pasig Type B helpers present to 3 while keeping six dry trucks and one helper per truck, and Apply. Network overview shows three trucks blocked by crew shortages; Dispatch has only three crew-ready dry trucks. Restore attendance and Apply after the demonstration. Normal/peak recommendations remain demand targets; daily attendance is a separate execution constraint. Payroll and replacement labor are not separately priced.
+
+Say: "The model is ready at 6:25 AM after preparation. Our editable illustrative Type B ban starts at 7 AM and ends at 9 AM, so a leg that finishes before 7 AM can move. A leg that would overlap waits before travel. The manifest distinguishes readiness from modeled departure. This demonstrates constraint logic; it does not establish current MMDA/LGU restrictions."

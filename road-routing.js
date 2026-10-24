@@ -1,4 +1,5 @@
 import { copy, DEPOT, summarizePlan } from './engine.js';
+import {crewAvailability} from './staffing.js';
 
 export const ROAD_ENDPOINT='https://router.project-osrm.org';
 const abort=signal=>{if(signal?.aborted)throw new DOMException('Road request aborted','AbortError');};
@@ -89,9 +90,14 @@ export function createOsrmClient({fetchImpl=globalThis.fetch,intervalMs=1100,sto
 // Validate the existing heuristic sequence against roads. Do not claim road-based optimisation.
 export async function validateRoadPlan(orders,c,fleet,base,router,{signal,onProgress=()=>{},maxPasses=5}={}) {
   const routes=[],missing=new Map(base.unassignedDeliveries.map(j=>[j.id,copy(j)]));
+  const staffing=crewAvailability(c,fleet),attempted={A:0,B:0};
   const depot=c.depot??DEPOT;let maximumSnap=0;
   const reject=(job,reason)=>{const {arrival,finish,wait,legKm,banWait,roadPoint,...data}=job;missing.set(job.id,{...data,reason});};
   for(const [index,original] of base.routes.entries()) {
+    if(attempted[original.type]++>=staffing.fleet[original.type]){
+      for(const job of original.stops)reject(job,'No driver/helper crew or available truck for this vehicle type.');
+      continue;
+    }
     abort(signal);let jobs=copy(original.stops),completed=false;
     for(let pass=0;pass<maxPasses&&jobs.length;pass++) {
       abort(signal);onProgress(`Road validation: vehicle ${index+1}/${base.routes.length}, pass ${pass+1}`);

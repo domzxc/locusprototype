@@ -1,3 +1,4 @@
+import {assumedAttendance} from '../staffing.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { defaults, copy, generateOrders, plan, allocate, positionAt, regionalAllocation, validateConfig, getRetailers, importRetailerMaster, travel } from '../engine.js';
@@ -99,7 +100,7 @@ test('new retailer IDs avoid imported IDs anywhere in the network',()=>{
 
 test('network summaries handle six empty masters and zero fleets without fake coverage',()=>{
   let root=initializeNetwork(copy(defaults));
-  for(const name of Object.keys(root.network))root=updateDistributor(root,name,{...root.network[name],retailers:[],currentFleet:{A:0,B:0}});
+  for(const name of Object.keys(root.network))root=updateDistributor(root,name,{...root.network[name],retailers:[],currentFleet:{A:0,B:0},attendance:assumedAttendance({A:0,B:0})});
   const totals=summarizeNetwork(networkPlans(root));
   for(const value of Object.values(totals))assert.equal(value,0);
 });

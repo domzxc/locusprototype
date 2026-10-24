@@ -2,11 +2,11 @@
 
 Open **Depot planning** in the sidebar, **Edit depot orders & current trucks** on Network overview, or **Change depot orders & trucks** in Dispatch.
 
-Each depot card provides three inputs with minus/plus buttons and direct number entry:
+Each depot card provides order/truck inputs plus attendance controls with minus/plus buttons and direct number entry:
 
 - Orders for the demo day: 0-500 parent retailer orders.
-- Current Type A refrigerated vans available to dispatch: 0-500.
-- Current Type B dry trucks available to dispatch: 0-500.
+- Current Type A refrigerated vans in the physical fleet: 0-500.
+- Current Type B dry trucks in the physical fleet: 0-500.
 
 Click **Apply [depot] plan** to save and recalculate. Unsaved drafts do not affect the plan. Recommendations shown on the card refer to the applied orders, not unsaved input. Each card compares saved current counts with normal and peak recommendations separately by vehicle type; spare dry trucks do not compensate for missing refrigerated vans.
 
@@ -28,8 +28,25 @@ The Dispatch **Try recommended fleet** button runs a temporary comparison. **Use
 
 ## Storage and compatibility
 
-Local configuration adds optional `dailyOrders` and `currentFleet: {A, B}`. Absent `dailyOrders` preserves the old all-active-profile behavior. Current fleet migration is idempotent and preserves explicitly saved zeros. Full version-2 settings export/import includes the fields and all six masters; standalone retailer exports remain profile-only. Applying a local edit preserves other depots. Data studio's operating-default reset preserves day demand and current inventory.
+Local configuration adds optional `dailyOrders` and `currentFleet: {A, B}`. Absent `dailyOrders` preserves the old all-active-profile behavior. Current fleet migration is idempotent and preserves explicitly saved zeros. Full version-2 settings export/import includes the fields and all six masters; standalone retailer exports remain profile-only. Applying a local edit preserves other depots. Data studio's operating-default reset preserves day demand, current inventory and attendance.
 
 ## Verification
 
 Tests cover non-destructive reductions, synthetic profile growth/global ID uniqueness, depot isolation, zero demand, zero trucks, fixed inventory during peak, idle cost, closed/archived profiles, bounds, settings migration and round-trip import. SSR checks render six sets of controls and current/recommended comparisons. Actual browser clicks, layout and hosted deployment remain unverified because this session has no enabled browser. Export settings before a normal Git revert if rollback is needed.
+
+
+## Driver and helper attendance
+
+Each depot saves scheduled and present drivers/helpers separately for Type A and Type B, plus required helpers per truck (0-3, default 1). Counts are synthetic day-level headcounts, not named employee, time-clock or payroll records. Present cannot exceed scheduled; headcounts must be integers from 0 to 1500. Defaults assume one scheduled/present driver and helper for each initial truck once. Saved zeros are preserved. Adding vehicles does not create people; change the roster and attendance explicitly. Counts persist until edited, with no automatic calendar reset.
+
+For each truck type:
+
+`crew-ready trucks = min(physical trucks, present drivers, floor(present helpers / required helpers per truck))`
+
+When no helpers are required, only physical trucks and present drivers limit availability. One driver and the configured helpers are dedicated to each vehicle's single tour; no cross-type or cross-depot staff pooling, split shifts, replacement staff or skill certification is modeled. The demand-based fleet recommendation stays independent; staff shortages limit the daily execution of that recommendation rather than reducing the capacity target.
+
+Apply the depot card to save attendance alongside orders and trucks. Network overview has an attendance card showing present/scheduled drivers and helpers, absences and trucks blocked by staff shortages, with a Manage attendance shortcut. Its comparison table shows crew-ready A/B trucks and attendance per depot. Dispatch shows physical inventory versus crew-ready fleet. Both approximate and road-validated routes enforce crew limits, including temporary fleet experiments. Extra trucks in Try recommended fleet still require present crews.
+
+Unavailable trucks remain physical assets and retain the modeled idle vehicle allowance. Staff wages, paid absences, replacement labor and headcount-based payroll are not separately modeled; the existing per-vehicle overtime allowance is unchanged. Spare present staff do not generate vehicles, and staff attendance remains recorded even on a zero-truck or zero-order day.
+
+Worked approximate Pasig example (default 100 orders): 2 A + 6 B physical trucks with full attendance fully plan 93 orders. Keeping those trucks but reducing present Type B helpers from 6 to 3 (one helper/truck) leaves 2 A + 3 B crew-ready trucks, fully plans 47 orders and incurs PHP 2,400 idle allowance for the three blocked dry trucks. These are deterministic model outputs, not observed attendance or delivery performance. Road validation can reduce coverage further.

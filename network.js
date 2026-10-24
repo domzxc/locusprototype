@@ -1,3 +1,4 @@
+import {assumedAttendance} from './staffing.js';
 import { defaults, copy, DISTRIBUTORS, getRetailers, validateConfig, generateOrders, allocate, plan } from './engine.js';
 
 // Illustrative depot/zone locations only: not surveyed warehouses or delivery addresses.
@@ -13,7 +14,8 @@ export function initializeNetwork(value) {
   const c=validateConfig(value);
   const withFleet=local=>{
     const recommended=allocate(generateOrders(local),local);
-    return {...local,currentFleet:local.currentFleet??{A:Math.min(500,recommended.A),B:Math.min(500,recommended.B)}};
+    const currentFleet=local.currentFleet??{A:Math.min(500,recommended.A),B:Math.min(500,recommended.B)};
+    return {...local,currentFleet,attendance:local.attendance??assumedAttendance(currentFleet)};
   };
   if(c.network){const network=Object.fromEntries(Object.entries(c.network).map(([name,local])=>[name,withFleet(local)]));return validateConfig({...network.Pasig,network});}
   const profiles=c.retailers?getRetailers(c):undefined;
@@ -64,11 +66,12 @@ export function updateDistributor(root,name,value) {
   return validateConfig({...network.Pasig,network});
 }
 
-export function setDepotWorkload(root,name,count,currentFleet) {
+export function setDepotWorkload(root,name,count,currentFleet,attendance) {
   if(!Number.isInteger(count)||count<0||count>500)throw Error('Use 0-500 whole retailer orders for the demo day.');
   if(!currentFleet)throw Error('Enter current Type A and Type B truck counts.');
   const local=copy(distributorConfig(root,name));
   local.currentFleet=copy(currentFleet);local.dailyOrders=count;
+  if(attendance!==undefined)local.attendance=copy(attendance);
   validateConfig(local);
   const master=getRetailers(local),active=master.filter(r=>r.enabled).length,extra=Math.max(0,count-active);
   if(master.length+extra>500)throw Error('This master would exceed 500 profiles. Restore archived profiles or request fewer orders.');
@@ -93,5 +96,5 @@ export function networkPlans(root,scenario='normal') {
 export function summarizeNetwork(runs) {
   const sum=f=>runs.reduce((s,r)=>s+f(r),0);
   const total=sum(r=>r.result.total),served=sum(r=>r.result.served),vehicles=sum(r=>r.result.routes.length),assigned=sum(r=>r.result.deliveryAssigned);
-  return {operatingCost:sum(r=>r.result.costs.operating),riskExposure:sum(r=>r.result.costs.spoilage+r.result.costs.lostMargin),economicTotal:sum(r=>r.result.costs.economicTotal),total,served,vehicles,assigned,allocated:sum(r=>r.fleet.A+r.fleet.B),km:sum(r=>r.result.km),cost:sum(r=>r.result.cost),coverage:total?served/total:0,averageDrops:vehicles?assigned/vehicles:0,util:vehicles?sum(r=>r.result.util*r.result.routes.length)/vehicles:0};
+  return {driversScheduled:sum(r=>r.result.staffing.driversScheduled),driversPresent:sum(r=>r.result.staffing.driversPresent),helpersScheduled:sum(r=>r.result.staffing.helpersScheduled),helpersPresent:sum(r=>r.result.staffing.helpersPresent),crewBlocked:sum(r=>r.result.staffing.crewBlocked),crewReady:sum(r=>r.result.staffing.fleet.A+r.result.staffing.fleet.B),operatingCost:sum(r=>r.result.costs.operating),riskExposure:sum(r=>r.result.costs.spoilage+r.result.costs.lostMargin),economicTotal:sum(r=>r.result.costs.economicTotal),total,served,vehicles,assigned,allocated:sum(r=>r.fleet.A+r.fleet.B),km:sum(r=>r.result.km),cost:sum(r=>r.result.cost),coverage:total?served/total:0,averageDrops:vehicles?assigned/vehicles:0,util:vehicles?sum(r=>r.result.util*r.result.routes.length)/vehicles:0};
 }

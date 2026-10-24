@@ -46,3 +46,10 @@ Panel simplicity update: Panel Guide now states the brief and maps Parts 1/2 to 
 
 
 Depot planning extension: daily order-count and current A/B availability inputs are saved per distributor. Recommendations are displayed separately. Current fleet is initially assumed once from the normal estimate, then remains fixed across normal/peak and demand changes. Day-demand reductions preserve profiles; increases can append synthetic profiles. See [module guide](depot-planning.md).
+
+
+## Crew availability and honest depot departure
+
+Physical inventory now differs from daily crew-ready capacity. Scheduled/present driver and helper counts by type/depot limit dispatch, without hiding the asset cost of crew-blocked trucks or lowering the demand-based recommendation. Full initial attendance is assumed, not observed. Helpers per truck is editable; no pooling or payroll integration is implied. The Network overview attendance card exposes this operating risk before leadership buys more trucks. See [Depot planning](depot-planning.md).
+
+Playback now distinguishes depot preparation from restriction waiting and stays at the actual depot while waiting, even when OSRM snaps the depot onto a nearby road. The manifest reports readiness and modeled departure separately. The default Type B 7-9 AM interval is still an illustrative no-movement assumption; pre-ban travel is permitted only when the driving leg finishes before the interval begins.

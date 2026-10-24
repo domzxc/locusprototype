@@ -1,3 +1,4 @@
+import {crewAvailability,validateAttendance} from './staffing.js';
 import { costDefaults, normalizeCosting, costBreakdown } from './costing.js';
 export const DEPOT = { lng: 121.0705, lat: 14.5764 };
 export const PRODUCTS = ['Toothpaste', 'Ice cream', 'Soap', 'Water purifier', 'Tea'];
@@ -93,9 +94,9 @@ export function plan(orders,c,fleet) {
   const deliveries=splitOrders(orders,c);
   const depot=c.depot??DEPOT;
   const pending = new Map(deliveries.map(o=>[o.id,o]));
-  const routes=[];
+  const routes=[],staffing=crewAvailability(c,fleet);
   for (const type of ['A','B']) {
-    for(let v=0;v<fleet[type];v++) {
+    for(let v=0;v<staffing.fleet[type];v++) {
       const route={id:`${type}-${String(v+1).padStart(2,'0')}`,type,stops:[],volume:0,weight:0,km:0,banWait:0,depart:c.start+c.loading,depot:copy(depot)};
       let loc=depot, time=route.depart;
       while(true) {
@@ -122,7 +123,7 @@ export function plan(orders,c,fleet) {
       } else break; // Identical unused vehicles cannot improve this type's next tour.
     }
   }
-  const unassignedDeliveries=[...pending.values()].map(o=>({...o,reason:o.receivingClosed?'Retailer closed for receiving on this demo day':o.service>o.close-o.open?'Full handling cannot fit retailer receiving window':o.volume>c[o.cold?'A':'B'].capacity || o.weight>c[o.cold?'A':'B'].weight?'Order exceeds compatible vehicle capacity':'No feasible capacity / time-window / shift slot in this heuristic'}));
+  const unassignedDeliveries=[...pending.values()].map(o=>({...o,reason:o.receivingClosed?'Retailer closed for receiving on this demo day':o.service>o.close-o.open?'Full handling cannot fit retailer receiving window':o.volume>c[o.cold?'A':'B'].capacity || o.weight>c[o.cold?'A':'B'].weight?'Order exceeds compatible vehicle capacity':staffing.fleet[o.cold?'A':'B']===0&&staffing.blocked[o.cold?'A':'B']>0?'No driver/helper crew available for this vehicle type':staffing.blocked[o.cold?'A':'B']>0?'No feasible staffed vehicle / capacity / time-window / shift slot in this heuristic':'No feasible capacity / time-window / shift slot in this heuristic'}));
   return summarizePlan(orders,c,fleet,routes,unassignedDeliveries);
 }
 export function summarizePlan(orders,c,fleet,routes,unassignedDeliveries) {
@@ -136,7 +137,7 @@ export function summarizePlan(orders,c,fleet,routes,unassignedDeliveries) {
   const unserved=orders.filter(o=>missingByParent.has(o.id)).map(o=>({...o,reason:`${assignedParents.has(o.id)?'Partially planned: ':''}${missingByParent.get(o.id).map(d=>`${d.shipment}: ${d.reason}`).join('; ')}`}));
   const served=orders.length-unserved.length;
   const partial=unserved.filter(o=>assignedParents.has(o.id)).length;
-  return {travelBasis:'approximate',costs:costBreakdown(routes,unassignedDeliveries,c,fleet),routes,unserved,unassignedDeliveries,served,partial,deliveryTotal:splitOrders(orders,c).length,deliveryAssigned:assigned.length,averageDrops:routes.length?assigned.length/routes.length:0,total:orders.length,km:routes.reduce((s,r)=>s+r.km,0),cost:routes.reduce((s,r)=>s+r.cost,0),util:routes.length?routes.reduce((s,r)=>s+r.volume/c[r.type].capacity,0)/routes.length:0,onTime:assigned.length?assigned.filter(o=>o.finish<=o.close+1e-9).length/assigned.length:0,coverage:orders.length?served/orders.length:0,fleet};
+  return {staffing:crewAvailability(c,fleet),travelBasis:'approximate',costs:costBreakdown(routes,unassignedDeliveries,c,fleet),routes,unserved,unassignedDeliveries,served,partial,deliveryTotal:splitOrders(orders,c).length,deliveryAssigned:assigned.length,averageDrops:routes.length?assigned.length/routes.length:0,total:orders.length,km:routes.reduce((s,r)=>s+r.km,0),cost:routes.reduce((s,r)=>s+r.cost,0),util:routes.length?routes.reduce((s,r)=>s+r.volume/c[r.type].capacity,0)/routes.length:0,onTime:assigned.length?assigned.filter(o=>o.finish<=o.close+1e-9).length/assigned.length:0,coverage:orders.length?served/orders.length:0,fleet};
 }
 function alongRoad(geometry,f) {
   const lengths=geometry.slice(1).map((p,i)=>distance({lng:geometry[i][0],lat:geometry[i][1]},{lng:p[0],lat:p[1]}));
@@ -146,11 +147,12 @@ function alongRoad(geometry,f) {
 }
 export function positionAt(route, minute) {
   const depot=route.depot??DEPOT;
+  if(minute<route.depart)return {...depot,status:'Depot preparation'};
   let origin=depot, departure=route.depart;
   for(const [index,stop] of route.stops.entries()) {
     const road=route.roadLegs?.[index];
     const leave=departure+stop.banWait, arrival=stop.arrival-stop.wait;
-    if(minute<leave) return {...(road?alongRoad(road.geometry,0):origin),status:'Waiting / restriction'};
+    if(minute<leave) return {...(index===0?depot:road?alongRoad(road.geometry,0):origin),status:'Waiting / restriction'};
     if(minute<arrival) {
       const f=Math.max(0,Math.min(1,(minute-leave)/(arrival-leave)));
       if(road)return {...alongRoad(road.geometry,f),status:'In transit'};
@@ -212,6 +214,7 @@ export function validateConfig(c) {
     const values=c[key]===undefined?fallback:c[key];
     if(!Array.isArray(values)||values.length!==5||values.some(v=>!finite(v,.000001,max))) throw Error(`Invalid ${key}: provide five positive per-box CBM/KG values.`);
   }
+  validateAttendance(c.attendance);
   if(c.dailyOrders!==undefined&&(!Number.isInteger(c.dailyOrders)||!finite(c.dailyOrders,0,500)))throw Error('Use 0-500 whole daily orders.');
   if(c.currentFleet!==undefined&&(!c.currentFleet||['A','B'].some(t=>!Number.isInteger(c.currentFleet[t])||!finite(c.currentFleet[t],0,500))))throw Error('Use 0-500 whole current trucks of each type.');
   if(c.distributor!==undefined&&!DISTRIBUTORS.some(d=>d.name===c.distributor)) throw Error('Unknown distributor.');

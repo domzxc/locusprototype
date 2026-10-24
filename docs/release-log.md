@@ -56,3 +56,8 @@ Split store and truck-ban waiting into separate columns, and exposed loading all
 ## 24 October 2026: workspace navigation and faster repeat road loading
 
 Removed implicit Dispatch redirects from depot selection while preserving explicit Open dispatch actions. Network-wide pages now show All. Added bounded, seven-day browser road-response caching, an eight-plan session cache, elapsed progress and actionable timeout handling. Road responses cache geometry/base travel only; changed assumptions still revalidate schedules and costs. A 100-order CLI check took about 18 seconds cold versus 18 milliseconds from the saved cache, with no warm network requests and unchanged results. Public service speed and browser/WebGL interactions are not guaranteed or verified by that check.
+
+
+## 24 October 2026: driver/helper attendance and departure clarity
+
+Added per-depot/type scheduled and present driver/helper counts and helpers-per-truck requirements in Depot planning. Network overview shows attendance, absences and crew-ready/blocked trucks; dispatch and road validation enforce staffing while preserving physical inventory and idle cost. Defaults assume full attendance once; no payroll or HR integration is included. Separated preparation readiness from modeled departure, corrected the pre-departure GPS status and prevented snapped depot geometry from moving a waiting marker away from the warehouse. The configured default Type B ban remains 7-9 AM, with an explicit explanation of pre-ban travel versus overlapping-leg waits.

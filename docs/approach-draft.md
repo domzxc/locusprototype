@@ -180,3 +180,10 @@ Internal JSON schedule values remain minutes after midnight to preserve compatib
 
 
 Current inventory extension: [Depot planning](depot-planning.md) saves the day demand and current A/B counts. Recommendation tables remain fleet-sizing outputs. Earlier peak performance rows use recommended peak fleets; saved current inventory no longer expands automatically on peak selection. Dispatch and Network overview test saved availability, with temporary Try recommended fleet experiments available locally.
+
+
+## Daily crew availability extension
+
+The demand-based normal/peak fleet remains the capacity target. Daily dispatch additionally restricts each depot/type to `min(physical trucks, present drivers, floor(present helpers / helpers required per truck))`; zero required helpers removes the helper limit. One driver per truck and one helper per truck initially are declared assumptions; helper requirement is editable. Scheduled and present headcounts are saved per type/depot, with no pooling or employee-level scheduling. Both approximate and road validation enforce the limit. Unassigned demand and idle physical truck costs remain visible. More vehicles alone cannot solve a staff shortage. Attendance history, leave forecasting and headcount-dependent payroll are not implemented.
+
+Preparation readiness is distinct from departure. The configured no-movement interval applies only to its selected vehicle type; pre-ban legs may run if they finish by the start, while overlapping legs wait before travel. The manifest adds first-leg ban wait to readiness to show modeled departure. The default 7-9 AM Type B setting remains illustrative, editable and unverified against local regulations.
